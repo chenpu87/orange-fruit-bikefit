@@ -21,8 +21,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 【最終修正】改回 v1beta。Log 顯示 v1 找不到模型，這是 Google 端點同步的已知問題。
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 【終極修復】使用 gemini-1.5-flash-latest，這是 Google 建議解決 404 的官方名稱標籤
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error?.message || `API 調用失敗 (HTTP ${response.status})`);
+      throw new Error(data.error?.message || `模型連線失敗 (HTTP ${response.status})`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
