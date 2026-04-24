@@ -1,5 +1,6 @@
 // api/analyze.js
 export default async function handler(req, res) {
+  // CORS 設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -21,8 +22,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 【終極修復】使用 gemini-1.5-flash-latest，這是 Google 建議解決 404 的官方名稱標籤
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    // 【終極修正】改用 v1 穩定版端點，並使用最基礎的模型名稱 gemini-1.5-flash
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -36,7 +37,9 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error?.message || `模型連線失敗 (HTTP ${response.status})`);
+      // 輸出更詳細的錯誤資訊至 Vercel Log 以利後續分析
+      console.error('Google API Error:', JSON.stringify(data));
+      throw new Error(data.error?.message || `API 呼叫失敗 (HTTP ${response.status})`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
