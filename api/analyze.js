@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 【關鍵修正】改回 v1beta，並使用絕對明確的模型標識符
+    // 【核心修復】使用 v1beta 端點並確保模型路徑正確
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
@@ -29,9 +29,8 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
-        // 移除所有可能導致未知欄位錯誤的參數，只保留最基礎的
         generationConfig: { 
-          temperature: 0.1
+          temperature: 0.1 // 降低隨機性以穩定輸出
         }
       }),
     });
@@ -39,8 +38,7 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (!response.ok) {
-      // 這裡會印出 Google 真正建議的模型列表，如果再失敗，請看 Vercel Log
-      console.error('Gemini API Error Detail:', JSON.stringify(data));
+      console.error('Gemini API 詳細錯誤報錯:', JSON.stringify(data));
       throw new Error(data.error?.message || `API 狀態碼: ${response.status}`);
     }
 
