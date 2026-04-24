@@ -3,55 +3,110 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orange Fruit — AI BikeFit Analyzer</title>
+<title>Orange Fruit — SMART BIKEFIT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* 樣式保持不變，僅微調 Navbar */
+/* ═══════════════════════════════════════════════════════════
+   TOKENS & BASE
+═══════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --or: #F47B00; --dk: #0F0F0F; --bg: #F7F6F4; --sur: #FFFFFF; --bd: #E8E8E6; --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace; }
-body { font-family: var(--font); background: var(--bg); color: #0F0F0F; min-height: 100vh; line-height: 1.5; }
-.navbar { background: var(--dk); height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 100; }
-.nav-name { font-size: 18px; font-weight: 800; color: #fff; }
-.nav-name span { color: var(--or); }
-/* Logo 容器 */
-.nav-logo-img { height: 42px; border-radius: 6px; }
-.page { max-width: 1020px; margin: 0 auto; padding: 24px 16px; }
-.card { background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-.upload-slot { border: 2px dashed #ccc; border-radius: 12px; min-height: 180px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
-.slot-preview { width: 100%; height: 180px; object-fit: cover; }
-.analyze-btn { width: 100%; background: var(--or); color: #fff; padding: 16px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; }
-.analyze-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-.footer { background: var(--dk); padding: 20px; text-align: center; color: #666; font-size: 12px; margin-top: 40px; }
-@media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
+:root {
+  --or: #F47B00; --ord: #C96200; --dk: #0F0F0F; --bg: #F7F6F4;
+  --sur: #FFFFFF; --bd: #E8E8E6; --tx: #0F0F0F; --tx3: #7A7A78;
+  --font: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'DM Mono', monospace;
+  --sh: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--tx); min-height: 100vh; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR (修正版)
+═══════════════════════════════════════════════════════════ */
+.navbar { background: var(--dk); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; }
+
+/* 左側 Logo */
+.nav-left { display: flex; align-items: center; }
+.nav-logo-main { height: 42px; width: auto; object-fit: contain; }
+
+/* 右側 文字 */
+.nav-right-text { color: #FFFFFF; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; font-family: var(--font); }
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT & STEPS
+═══════════════════════════════════════════════════════════ */
+.page { max-width: 1020px; margin: 0 auto; padding: 32px 20px 80px; }
+.step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; box-shadow: var(--sh); }
+.step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.step-circle.active { background: var(--dk); color: #fff; }
+.step-circle.idle { background: var(--bd); color: #aaa; }
+.step-connector { flex: 1; height: 2px; background: var(--bd); margin: 0 12px; }
+
+/* ═══════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════ */
+.card { background: var(--sur); border: 1px solid var(--bd); border-radius: 20px; overflow: hidden; margin-bottom: 20px; box-shadow: var(--sh); animation: fadeUp 0.35s ease-out; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.card-head { padding: 18px 24px; border-bottom: 1px solid var(--bd); font-weight: 700; font-size: 16px; }
+.card-body { padding: 24px; }
+
+.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.upload-slot { border: 2px dashed #D8D8D5; border-radius: 16px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; background: #F9F9F8; gap: 8px; }
+.upload-slot:hover { border-color: var(--or); background: #FFF8F0; }
+.slot-preview { width: 100%; height: 200px; object-fit: cover; border-radius: 14px; }
+
+.analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 16px; border-radius: 12px; border: none; cursor: pointer; transition: background 0.2s; }
+.analyze-btn:hover:not(.disabled) { background: var(--ord); }
+.analyze-btn.disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
+
+.footer { background: var(--dk); padding: 24px; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; }
+
+@media (max-width: 600px) { 
+  .navbar { padding: 0 16px; }
+  .nav-right-text { font-size: 16px; }
+  .upload-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="nav-name"><span>Orange</span> Fruit</div>
-  <img src="image_c21a3c.png" alt="Logo" class="nav-logo-img">
+  <div class="nav-left">
+    <img src="assets/logo-01.png" alt="Orange Fruit" class="nav-logo-main">
+  </div>
+  <div class="nav-right-text">SMART BIKEFIT</div>
 </nav>
 
 <div class="page" id="page">
+  <div class="step-bar" id="step-bar"></div>
   <div id="view-1"></div>
   <div id="view-2" style="display:none"></div>
   <div id="view-3" style="display:none"></div>
 </div>
 
 <footer class="footer">
-  Powered by Google Gemini AI · Orange Fruit AI v3.4
+  Orange Fruit AI BikeFit · v3.5 · Powered by Google Gemini AI
 </footer>
 
 <script>
 let S = { step: 1, bdcURL: null, tdcURL: null, result: null, error: '' };
 
 function render() {
+  const sb = document.getElementById('step-bar');
   const v1 = document.getElementById('view-1');
   const v2 = document.getElementById('view-2');
   const v3 = document.getElementById('view-3');
+
+  sb.innerHTML = `
+    <div class="step-item"><div class="step-circle ${S.step>=1?'active':'idle'}">1</div> 上傳</div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle ${S.step>=2?'active':'idle'}">2</div> 分析</div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle ${S.step>=3?'active':'idle'}">3</div> 報告</div>
+  `;
 
   v1.style.display = S.step === 1 ? 'block' : 'none';
   v2.style.display = S.step === 2 ? 'block' : 'none';
@@ -60,33 +115,41 @@ function render() {
   if (S.step === 1) {
     v1.innerHTML = `
       <div class="card">
-        <h3 style="margin-bottom:12px;">📸 上傳 BikeFit 照片</h3>
-        <div class="upload-grid">
-          <div class="upload-slot" onclick="document.getElementById('fi-bdc').click()">
-            ${S.bdcURL ? `<img src="${S.bdcURL}" class="slot-preview">` : '點擊上傳 BDC (下死點)'}
-            <input type="file" id="fi-bdc" hidden onchange="handleFile('bdc', this)">
+        <div class="card-head">📸 請上傳騎乘側面照片</div>
+        <div class="card-body">
+          <div class="upload-grid">
+            <div class="upload-slot" onclick="document.getElementById('fi-bdc').click()">
+              ${S.bdcURL ? `<img src="${S.bdcURL}" class="slot-preview">` : '🦵 上傳 BDC (6點鐘)'}
+              <input type="file" id="fi-bdc" hidden onchange="handleFile('bdc', this)">
+            </div>
+            <div class="upload-slot" onclick="document.getElementById('fi-tdc').click()">
+              ${S.tdcURL ? `<img src="${S.tdcURL}" class="slot-preview">` : '🔄 上傳 TDC (1點鐘)'}
+              <input type="file" id="fi-tdc" hidden onchange="handleFile('tdc', this)">
+            </div>
           </div>
-          <div class="upload-slot" onclick="document.getElementById('fi-tdc').click()">
-            ${S.tdcURL ? `<img src="${S.tdcURL}" class="slot-preview">` : '點擊上傳 TDC (上死點)'}
-            <input type="file" id="fi-tdc" hidden onchange="handleFile('tdc', this)">
-          </div>
+          <button class="analyze-btn ${S.bdcURL && S.tdcURL ? '' : 'disabled'}" onclick="startAnalysis()">開始 AI 分析</button>
+          ${S.error ? `<div style="color:red; margin-top:12px; font-size:13px; text-align:center;">⚠ ${S.error}</div>` : ''}
         </div>
-        <button class="analyze-btn ${S.bdcURL && S.tdcURL ? '' : 'disabled'}" onclick="startAnalysis()">開始分析</button>
-        ${S.error ? `<p style="color:red; font-size:12px; margin-top:10px;">${S.error}</p>` : ''}
-      </div>`;
-  }
-  
-  if (S.step === 2) {
-    v2.innerHTML = `<div class="card" style="text-align:center;">🚀 Gemini 正在分析中...</div>`;
+      </div>
+    `;
   }
 
-  if (S.step === 3) {
+  if (S.step === 2) {
+    v2.innerHTML = `<div class="card"><div class="card-body" style="text-align:center; padding:50px 0;">🚀 Gemini 正在分析數據，請稍候...</div></div>`;
+  }
+
+  if (S.step === 3 && S.result) {
     v3.innerHTML = `
       <div class="card">
-        <h3>✅ 分析報告</h3>
-        <div style="background:#f4f4f4; padding:12px; border-radius:8px; margin:16px 0; font-size:14px;">${S.result.summary_zh}</div>
-        <button class="analyze-btn" onclick="location.reload()">重新開始</button>
-      </div>`;
+        <div class="card-head">✅ 分析報告</div>
+        <div class="card-body">
+          <div style="background:#F4F4F4; padding:20px; border-radius:12px; margin-bottom:20px; line-height:1.8;">
+            ${S.result.summary_zh || '分析完成。'}
+          </div>
+          <button class="analyze-btn" onclick="location.reload()">重新分析</button>
+        </div>
+      </div>
+    `;
   }
 }
 
@@ -94,26 +157,30 @@ function handleFile(key, input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { S[key+'URL'] = e.target.result; render(); };
+  reader.onload = e => { S[key + 'URL'] = e.target.result; render(); };
   reader.readAsDataURL(file);
 }
 
 async function startAnalysis() {
   if (!S.bdcURL || !S.tdcURL) return;
-  S.step = 2; render();
+  S.step = 2; S.error = ''; render();
+
   try {
     const content = [
-      { type: 'text', text: '請分析這兩張照片的 BikeFit 角度，並以繁體中文回傳 summary_zh 欄位。格式：{"angles":{}, "summary_zh":""}' },
+      { type: 'text', text: '你是專業 Bikefit 分析師。請分析這兩張照片並回傳 JSON 格式：{"summary_zh": "繁體中文調整建議"}' },
       { type: 'image', source: { type: 'base64', data: S.bdcURL.split(',')[1] } },
       { type: 'image', source: { type: 'base64', data: S.tdcURL.split(',')[1] } }
     ];
+
     const resp = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: [{ role: 'user', content }] })
     });
+
     const data = await resp.json();
     if (data.error) throw new Error(data.error.message);
+
     const raw = data.content[0].text.replace(/```json|```/g, '').trim();
     S.result = JSON.parse(raw);
     S.step = 3;
