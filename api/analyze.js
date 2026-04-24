@@ -1,7 +1,6 @@
 // ============================================================
 // Orange Fruit BikeFit — Vercel Serverless API Proxy
-// 使用 Google Gemini 1.5 Flash（免費）
-// API Key 存在 Vercel 環境變數，用戶不需要輸入
+// 使用 Google Gemini 2.5 Flash（免費）
 // ============================================================
 
 module.exports = async function handler(req, res) {
@@ -12,10 +11,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method Not Allowed' } });
 
-  // Key 只從伺服器端環境變數取得，不接受前端傳入
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: { message: '伺服器未設定 GEMINI_API_KEY，請至 Vercel 環境變數設定' } });
+    return res.status(500).json({ error: { message: '伺服器未設定 GEMINI_API_KEY' } });
   }
 
   try {
@@ -37,8 +35,9 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 用 v1beta 端點，支援 gemini-1.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // gemini-2.5-flash 搭配 v1beta 端點
+    const model = 'gemini-2.5-flash-preview-04-17';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -61,7 +60,6 @@ module.exports = async function handler(req, res) {
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // 回傳 Anthropic 相容格式（前端不需要改）
     return res.status(200).json({
       content: [{ type: 'text', text }]
     });
