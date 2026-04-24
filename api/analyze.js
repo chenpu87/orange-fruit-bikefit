@@ -21,8 +21,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 改用 gemini-1.5-pro 模組，提供更強的視覺分析能力
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+    // 改用最穩定的視覺模型路徑
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -30,15 +30,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
         generationConfig: { 
-          temperature: 0.1, 
-          maxOutputTokens: 1500
+          temperature: 0.1,
+          maxOutputTokens: 2048
         }
       }),
     });
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error?.message || `API 呼叫失敗 (HTTP ${response.status})`);
+      throw new Error(data.error?.message || `Gemini API 報錯: ${response.status}`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
