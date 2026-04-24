@@ -853,7 +853,7 @@ input[type=file] { display: none; }
 
 <!-- ── FOOTER ───────────────────────────────────────── -->
 <footer class="footer">
-  <div class="footer-l">Orange Fruit AI BikeFit Analyzer · v3.0 · Bottom-Up Protocol · Powered by Google Gemini AI</div>
+  <div class="footer-l">Orange Fruit AI BikeFit Analyzer · v3.0 · Bottom-Up Protocol · Powered by Claude AI</div>
   <div class="footer-r">Orange Fruit — Free Your Fit</div>
 </footer>
 
@@ -889,7 +889,6 @@ function gst(v, t) {
 // ── STATE ────────────────────────────────────────────
 const S = {
   step: 1,
-  apiKey: (() => { try { return localStorage.getItem('of_api_key') || ''; } catch(e) { return ''; } })(),
   bdcURL: null, bdcImg: null,
   tdcURL: null, tdcImg: null,
   result: null,
@@ -981,25 +980,6 @@ function renderUpload() {
       <span style="font-family:var(--mono);font-size:10px;color:var(--tx3)">JPG / PNG · 側面拍攝</span>
     </div>
     <div class="card-body">
-      <!-- API KEY -->
-      <div style="background:#F8F8F8;border:1px solid var(--bd);border-radius:var(--rs);padding:14px 16px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:12px;font-weight:700;color:var(--tx2);display:flex;align-items:center;gap:6px">
-            🔑 Google Gemini API Key
-          </div>
-          <div id="api-status" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--er-bg);color:var(--er);border:1px solid var(--er-bd)">未設定</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off"
-            style="flex:1;padding:9px 12px;font-family:var(--mono);font-size:12px;border:1px solid var(--bd2);border-radius:var(--rs);background:var(--sur);color:var(--tx);outline:none;transition:border .15s;letter-spacing:.04em">
-          <button onclick="saveApiKey()" class="btn btn-dark btn-sm">儲存</button>
-        </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:6px">
-          API Key 完全免費，僅儲存在你的瀏覽器，不會上傳至任何伺服器。
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--or);text-decoration:none">前往 Google AI Studio 取得免費 Key →</a>
-        </div>
-      </div>
-
       <div class="instr-box">
         <div class="instr-title">📌 拍攝說明</div>
         <div class="instr-steps">
@@ -1018,7 +998,7 @@ function renderUpload() {
       <div class="cta-banner">
         <div class="cta-info">
           <div class="cta-title">${has2 ? '✓ 兩張照片就緒，可以開始分析' : can ? '已上傳一張，建議補上另一張以獲得完整分析' : '請上傳騎乘側面照片'}</div>
-          <div class="cta-sub">${has2 ? 'BDC + TDC 雙幀 · Bottom-Up 完整分析' : can ? '單幀模式 · 部分角度可能無法測量' : 'Bottom-Up Protocol · Google Gemini AI Vision'}</div>
+          <div class="cta-sub">${has2 ? 'BDC + TDC 雙幀 · Bottom-Up 完整分析' : can ? '單幀模式 · 部分角度可能無法測量' : 'Bottom-Up Protocol · Claude AI Vision'}</div>
         </div>
         <div class="analyze-btn${can ? '' : ' disabled'}" id="analyze-btn" role="button" tabindex="${can ? '0' : '-1'}">
           <span>開始人工智慧分析</span>
@@ -1346,7 +1326,6 @@ function loadImg(key, file) {
 // ── ANALYSIS ─────────────────────────────────────────
 async function startAnalysis() {
   if (!S.bdcURL && !S.tdcURL) { set({ error: '請先上傳至少一張照片' }); return; }
-  if (!S.apiKey) { set({ error: '請先設定 Anthropic API Key（點上方輸入框）' }); return; }
 
   // Switch to step 2 immediately
   S.step = 2;
@@ -1390,8 +1369,7 @@ async function startAnalysis() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        apiKey: S.apiKey,
-        model: 'gemini-1.5-pro',
+        model: 'claude-opus-4-5',
         max_tokens: 1200,
         messages: [{ role: 'user', content }],
       }),
@@ -1616,7 +1594,7 @@ function exportReport() {
     '',
     '══════════════════════════════════',
     'Orange Fruit · Free Your Fit',
-    'Powered by Google Gemini AI · Bottom-Up Protocol',
+    'Powered by Google Gemini AI · OPC Protocol',
   ];
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
   const el   = document.createElement('a');
@@ -1645,42 +1623,8 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
-
-// ── API KEY ──────────────────────────────────────────
-function saveApiKey() {
-  const input = document.getElementById('api-key-input');
-  const key = input?.value?.trim();
-  if (!key || (!key.startsWith('sk-') && !key.startsWith('AIza'))) {
-    alert('請輸入正確的 Gemini API Key（以 AIza 開頭）');
-    return;
-  }
-  try { localStorage.setItem('of_api_key', key); } catch(e) {}
-  S.apiKey = key;
-  updateApiStatus();
-  alert('API Key 已儲存！');
-}
-
-function updateApiStatus() {
-  const el = document.getElementById('api-status');
-  const input = document.getElementById('api-key-input');
-  if (!el) return;
-  if (S.apiKey) {
-    el.style.background = 'var(--ok-bg)';
-    el.style.color = 'var(--ok)';
-    el.style.borderColor = 'var(--ok-bd)';
-    el.textContent = '✓ 已設定';
-    if (input) input.value = S.apiKey;
-  } else {
-    el.style.background = 'var(--er-bg)';
-    el.style.color = 'var(--er)';
-    el.style.borderColor = 'var(--er-bd)';
-    el.textContent = '未設定';
-  }
-}
-
 // ── INIT ─────────────────────────────────────────────
 render();
-updateApiStatus();
 </script>
 </body>
 </html>
