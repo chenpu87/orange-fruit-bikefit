@@ -1384,10 +1384,17 @@ async function startAnalysis() {
 
     const data = await resp.json();
     const raw  = data.content.map(b => b.text || '').join('');
-    const m    = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('AI 未回傳有效 JSON，請重試');
+    // 清除 Gemini 可能回傳的 markdown 符號
+    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const m = cleaned.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('AI 未回傳有效 JSON，請重試。原始回應：' + raw.substring(0, 200));
 
-    const parsed = JSON.parse(m[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(m[0]);
+    } catch(parseErr) {
+      throw new Error('JSON 解析失敗：' + parseErr.message + '\n原始：' + m[0].substring(0, 200));
+    }
     if (!parsed.angles) throw new Error('回傳格式不完整，請重試');
 
     setPct(95); addLog('⟳ 生成報告…', 'info');
