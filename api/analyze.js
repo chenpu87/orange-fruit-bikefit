@@ -21,8 +21,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 使用穩定版 v1 端點，這是 gemini-1.5-flash 最穩定的呼叫方式
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 使用 v1beta 並確保模型名稱包含完整路徑
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -38,8 +38,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     if (!response.ok) {
-      // 擷取更詳細的錯誤訊息以便偵錯
-      throw new Error(data.error?.message || `Gemini API 調用失敗 (HTTP ${response.status})`);
+      throw new Error(data.error?.message || `API 呼叫失敗 (HTTP ${response.status})`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
