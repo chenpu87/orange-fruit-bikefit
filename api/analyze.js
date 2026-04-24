@@ -21,24 +21,27 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 改用最穩定的視覺模型路徑
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${apiKey}`;
+    // 【關鍵修正】改回 v1beta，並使用絕對明確的模型標識符
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
+        // 移除所有可能導致未知欄位錯誤的參數，只保留最基礎的
         generationConfig: { 
-          temperature: 0.1,
-          maxOutputTokens: 2048
+          temperature: 0.1
         }
       }),
     });
 
     const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error(data.error?.message || `Gemini API 報錯: ${response.status}`);
+      // 這裡會印出 Google 真正建議的模型列表，如果再失敗，請看 Vercel Log
+      console.error('Gemini API Error Detail:', JSON.stringify(data));
+      throw new Error(data.error?.message || `API 狀態碼: ${response.status}`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
