@@ -1279,12 +1279,12 @@ function renderReport() {
     </div>
 
     <div class="tab-bar">
-      ${[['angles','📐 角度分析'],['visual','🦴 關節標示'],['recs','💡 調整建議'],['sim','🔬 姿勢模擬']].map(([id, lbl]) =>
+      ${[['angles','📐 角度分析'],['visual','🦴 關節標示'],['recs','💡 調整建議']].map(([id, lbl]) =>
         `<button class="tab-btn${S.tab === id ? ' on' : ''}" data-tab="${id}">${lbl}</button>`
       ).join('')}
     </div>
 
-    ${['angles','visual','recs','sim'].map(id =>
+    ${['angles','visual','recs'].map(id =>
       `<div class="tab-panel${S.tab === id ? ' on' : ''}" id="tp-${id}">${tabContent[id]}</div>`
     ).join('')}
 
@@ -1387,16 +1387,32 @@ async function startAnalysis() {
 
     const data = await resp.json();
     const raw  = data.content.map(b => b.text || '').join('');
-    // 清除 Gemini 可能回傳的 markdown 符號
-    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('AI 未回傳有效 JSON，請重試。原始回應：' + raw.substring(0, 200));
-
+    // 清除 markdown
+    const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
     let parsed;
     try {
+      // 嘗試完整解析
+      const m = cleaned.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('no json');
       parsed = JSON.parse(m[0]);
-    } catch(parseErr) {
-      throw new Error('JSON 解析失敗：' + parseErr.message + '\n原始：' + m[0].substring(0, 200));
+    } catch(e1) {
+      // JSON 截斷時：手動提取 angles
+      try {
+        const angStr = cleaned.match(/"angles"\s*:\s*\{([^}]+)\}/)?.[1];
+        if (!angStr) throw new Error('no angles');
+        const angles = {};
+        angStr.match(/"(\w+)"\s*:\s*([\d.]+|null)/g)?.forEach(kv => {
+          const [k,v] = kv.replace(/"/g,'').split(':').map(s=>s.trim());
+          angles[k] = v==='null'?null:parseInt(v);
+        });
+        const overall = cleaned.match(/"overall"\s*:\s*"([^"]+)"/)?.[1] || 'needs_adjustment';
+        const conf    = parseInt(cleaned.match(/"confidence"\s*:\s*(\d+)/)?.[1]) || 70;
+        const summary = cleaned.match(/"summary_zh"\s*:\s*"([^"]+)"/)?.[1] || '分析完成，部分資料截斷。';
+        parsed = { angles, skeleton:{}, overall, confidence:conf, bottom_up_issues:[], summary_zh:summary };
+        addLog('⚠ 部分資料截斷，已提取角度資料', 'info');
+      } catch(e2) {
+        throw new Error('解析失敗，請重試。原始：' + raw.substring(0,150));
+      }
     }
     if (!parsed.angles) throw new Error('回傳格式不完整，請重試');
 
@@ -1412,21 +1428,12 @@ async function startAnalysis() {
 }
 
 function buildPrompt(has2) {
-  return `你是專業Bikefit分析師。${has2?'圖一是BDC(曲柄6點鐘下死點)，圖二是TDC(曲柄1點鐘近上死點)。':'請分析此騎乘側面照片。'}
+  return `你是Bikefit分析師。${has2?'圖一BDC(6點鐘下死點)，圖二TDC(1點鐘上死點)。':'分析此騎乘側面照片。'}
 
-skeleton座標規則（極為重要，必須精確）：
-- 座標以BDC圖像素位置為準，x=左到右比例，y=上到下比例（左上角=0,0）
-- neck：頸肩交接處（約在頭部下方、肩膀正上方）
-- shoulder：肩峰最高點（手臂與軀幹交接的骨性突起）
-- hip：髖關節大轉子（褲子側邊最突出的骨頭位置）
-- elbow：肘關節中心
-- wrist：手腕關節中心（握把附近手腕彎折處）
-- knee：膝關節中心（大腿與小腿交接）
-- ankle：踝關節中心（腳踝骨頭）
-- foot：第五蹠骨頭（腳掌外側前端，腳尖方向）
-- 每個座標必須對應照片中該關節的實際像素位置，不可估算偏差超過3%
+座標說明：以BDC圖為準，x=左到右0-1，y=上到下0-1。
+neck=頸肩交接，shoulder=肩峰，hip=大轉子，elbow=肘，wrist=手腕，knee=膝，ankle=踝，foot=腳掌前端。
 
-只回傳JSON，完全禁止任何說明文字或markdown符號：{"angles":{"knee_extension":<BDC膝伸展角整數或null>,"knee_flexion":<TDC膝屈曲角整數>,"hip_angle":<髖角整數>,"ankle_max":<腳踝背屈角整數>,"shoulder_wrist":<肩腕角整數>,"back_angle":<背部角整數>},"skeleton":{"hip":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"neck":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中問題>"],"summary_zh":"<3句繁中摘要>"}`;
+只回傳JSON，禁止markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":{"neck":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"hip":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中>"}`;
 }
 
 // ── SKELETON CANVAS ──────────────────────────────────
