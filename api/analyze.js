@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify({
             contents: [{ parts }],
             generationConfig: {
-              maxOutputTokens: 2048,
+              maxOutputTokens: 8192,
               temperature: 0.1,
               responseMimeType: 'application/json',
             }
