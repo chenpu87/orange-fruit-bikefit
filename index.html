@@ -6,50 +6,36 @@
 <title>Orange Fruit — SMART BIKEFIT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-/* 基礎樣式 */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --or: #F47B00; --dk: #0F0F0F; --bg: #F7F6F4; --sur: #FFFFFF; --bd: #E8E8E6;
-  --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
-}
-body { font-family: var(--font); background: var(--bg); color: #0F0F0F; min-height: 100vh; line-height: 1.5; }
-
-/* NAVBAR 視覺配置 */
-.navbar { background: var(--dk); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; }
-.nav-logo-main { height: 42px; width: auto; object-fit: contain; }
-.nav-right-text { color: #FFFFFF; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; }
-
-/* 佈局 */
-.page { max-width: 1020px; margin: 0 auto; padding: 32px 20px; }
-.step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-.step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
-.step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-.step-circle.active { background: var(--dk); color: #fff; }
-.step-circle.idle { background: var(--bd); color: #aaa; }
-.step-connector { flex: 1; height: 2px; background: var(--bd); margin: 0 12px; }
-
-.card { background: var(--sur); border: 1px solid var(--bd); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 24px; animation: fadeUp 0.35s ease-out; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
-
-.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
-.upload-slot { border: 2px dashed #D8D8D5; border-radius: 16px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #F9F9F8; gap: 8px; overflow: hidden; }
-.slot-preview { width: 100%; height: 200px; object-fit: cover; }
-
-.analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 16px; border-radius: 12px; border: none; cursor: pointer; }
-.analyze-btn.disabled { background: #ccc; cursor: not-allowed; }
-
-.footer { background: var(--dk); padding: 24px; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 40px; }
-
-@media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } .nav-right-text { font-size: 16px; } }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --or: #F47B00; --dk: #0F0F0F; --bg: #F7F6F4; --sur: #FFFFFF; --bd: #E8E8E6; --font: 'DM Sans', sans-serif; }
+  body { font-family: var(--font); background: var(--bg); color: #0F0F0F; min-height: 100vh; line-height: 1.5; }
+  .navbar { background: var(--dk); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo-main { height: 42px; width: auto; object-fit: contain; }
+  .nav-right-text { color: #FFFFFF; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; }
+  .page { max-width: 1020px; margin: 0 auto; padding: 32px 20px; }
+  .step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .step-circle.active { background: var(--dk); color: #fff; }
+  .step-circle.idle { background: var(--bd); color: #aaa; }
+  .step-connector { flex: 1; height: 2px; background: var(--bd); margin: 0 12px; }
+  .card { background: var(--sur); border: 1px solid var(--bd); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 24px; animation: fadeUp 0.35s ease-out; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .upload-slot { border: 2px dashed #D8D8D5; border-radius: 16px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #F9F9F8; gap: 8px; overflow: hidden; }
+  .slot-preview { width: 100%; height: 200px; object-fit: cover; }
+  .analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 16px; border-radius: 12px; border: none; cursor: pointer; }
+  .analyze-btn.disabled { background: #ccc; cursor: not-allowed; }
+  .footer { background: var(--dk); padding: 24px; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; }
 </style>
 </head>
 <body>
 
 <nav class="navbar">
   <div class="nav-left">
-    <img src="logo-01.png" alt="Orange Fruit" class="nav-logo-main">
+    <img src="assets/logo-01.png" alt="Orange Fruit" class="nav-logo-main">
   </div>
   <div class="nav-right-text">SMART BIKEFIT</div>
 </nav>
@@ -62,7 +48,7 @@ body { font-family: var(--font); background: var(--bg); color: #0F0F0F; min-heig
 </div>
 
 <footer class="footer">
-  Orange Fruit AI BikeFit · v3.6 · Powered by Google Gemini AI
+  Orange Fruit AI BikeFit · v3.8 · Powered by Google Gemini AI
 </footer>
 
 <script>
@@ -90,7 +76,6 @@ function render() {
     v1.innerHTML = `
       <div class="card">
         <h3 style="margin-bottom:12px;">📸 請上傳騎乘側面照片</h3>
-        <p style="font-size:13px; color:#666;">請上傳曲柄在 6 點鐘 (BDC) 與 1 點鐘 (TDC) 的照片</p>
         <div class="upload-grid">
           <div class="upload-slot" onclick="document.getElementById('fi-bdc').click()">
             ${S.bdcURL ? `<img src="${S.bdcURL}" class="slot-preview">` : '🦵 上傳 BDC (6點鐘)'}
@@ -108,15 +93,15 @@ function render() {
   }
 
   if (S.step === 2) {
-    v2.innerHTML = `<div class="card" style="text-align:center; padding:60px 0;">🚀 Gemini 正在精確測量角度...<br><span style="font-size:12px; color:#aaa;">預計耗時 10-15 秒</span></div>`;
+    v2.innerHTML = `<div class="card" style="text-align:center; padding:60px 0;">🚀 Gemini 正在精確測量數據...</div>`;
   }
 
   if (S.step === 3 && S.result) {
     v3.innerHTML = `
       <div class="card">
         <h3 style="margin-bottom:16px;">✅ AI 分析報告</h3>
-        <div style="background:#F4F4F4; padding:20px; border-radius:12px; margin-bottom:20px; line-height:1.8; white-space: pre-line;">
-          ${S.result.summary_zh || '分析完成，請參考建議。'}
+        <div style="background:#F4F4F4; padding:20px; border-radius:12px; margin-bottom:20px; line-height:1.8;">
+          ${S.result.summary_zh || '分析完成。'}
         </div>
         <button class="analyze-btn" onclick="location.reload()">↺ 重新分析新照片</button>
       </div>
@@ -137,8 +122,7 @@ async function startAnalysis() {
   S.step = 2; S.error = ''; render();
 
   try {
-    const prompt = `你是專業 Bikefit 分析師。請分析照片中的騎乘姿勢（BDC下死點與TDC上死點），並回傳 JSON 格式數據。不要回傳任何 Markdown 標籤語法。
-    格式：{"summary_zh": "繁體中文詳細分析與調整建議"}`;
+    const prompt = `你是專業 Bikefit 分析師。請分析照片並回傳 JSON 格式數據，不要 Markdown。格式範例：{"summary_zh": "調整建議內容"}`;
 
     const content = [
       { type: 'text', text: prompt },
@@ -155,7 +139,6 @@ async function startAnalysis() {
     const data = await resp.json();
     if (data.error) throw new Error(data.error.message);
 
-    // 強化的 JSON 清洗邏輯
     let raw = data.content[0].text;
     raw = raw.replace(/```json/g, '').replace(/```/g, '').trim();
     
@@ -163,12 +146,12 @@ async function startAnalysis() {
     if (jsonMatch) {
       S.result = JSON.parse(jsonMatch[0]);
     } else {
-      throw new Error("AI 回傳格式不正確");
+      throw new Error("無法解析回傳格式");
     }
     
     S.step = 3;
   } catch (err) {
-    S.error = "分析錯誤：" + err.message; S.step = 1;
+    S.error = err.message; S.step = 1;
   }
   render();
 }
