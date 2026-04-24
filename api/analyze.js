@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   try {
     const { messages } = req.body;
     const userMessage = messages[0].content;
+
     const textPart = userMessage.find(c => c.type === 'text')?.text || "";
     const imageParts = userMessage
       .filter(c => c.type === 'image')
@@ -20,23 +21,31 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 使用 v1 穩定端點與絕對模型路徑
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 【核心修正】使用 v1beta 端點並確保模型 ID 正確
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
-        generationConfig: { temperature: 0.1 }
+        generationConfig: { 
+          temperature: 0.1 // 降低隨機性以獲取穩定的 JSON
+        }
       }),
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || `API Error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(data.error?.message || `API 調用失敗 (HTTP ${response.status})`);
+    }
 
     const resultText = data.candidates[0].content.parts[0].text;
-    return res.status(200).json({ content: [{ type: 'text', text: resultText }] });
+
+    return res.status(200).json({
+      content: [{ type: 'text', text: resultText }]
+    });
+
   } catch (err) {
     return res.status(500).json({ error: { message: err.message } });
   }
