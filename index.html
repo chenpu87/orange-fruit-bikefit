@@ -4,1893 +4,749 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orange Fruit — Smart BikeFit</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════════════════════════
-   TOKENS
-═══════════════════════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --or: #F47B00;
-  --ord: #C96200;
-  --orl: #FFF8F0;
-  --orb: #F5C060;
-  --dk: #0F0F0F;
-  --dk2: #1A1A1A;
-  --dk3: #252525;
-  --bg: #F7F6F4;
-  --sur: #FFFFFF;
-  --sur2: #F9F9F8;
-  --sur3: #F2F1EF;
-  --bd: #E8E8E6;
-  --bd2: #D8D8D5;
-  --bd3: #C8C8C4;
-  --tx: #0F0F0F;
-  --tx2: #3A3A3A;
-  --tx3: #7A7A78;
-  --tx4: #ADADAA;
-  --ok: #0B8A5C;
-  --ok-bg: #E8F6EF;
-  --ok-bd: #9ADFC0;
-  --wn: #B86A00;
-  --wn-bg: #FEF3E2;
-  --wn-bd: #F5C87A;
-  --er: #C0231A;
-  --er-bg: #FDECEB;
-  --er-bd: #F5ACA8;
-  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --mono: 'DM Mono', 'Courier New', monospace;
-  --r: 16px;
-  --rs: 10px;
-  --rl: 20px;
-  --sh: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
-  --sh2: 0 8px 32px rgba(0,0,0,.12);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --or:#F47B00;--ord:#C96200;--orl:#FFF3E0;--orb:#F5C060;
+  --dk:#111;--dk2:#1E1E1E;
+  --bg:#F7F6F4;--sur:#FFF;--sur2:#F9F9F8;
+  --bd:#E8E8E6;--bd2:#D8D8D5;
+  --tx:#111;--tx2:#484848;--tx3:#888;--tx4:#C0C0C0;
+  --ok:#0B8A5C;--ok-bg:#E8F6EF;--ok-bd:#9ADFC0;
+  --wn:#B86A00;--wn-bg:#FEF3E2;--wn-bd:#F5C87A;
+  --er:#C0231A;--er-bg:#FDECEB;--er-bd:#F5ACA8;
+  --font:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'DM Mono','Courier New',monospace;
+  --r:16px;--rs:10px;
+  --sh:0 1px 4px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
 }
+html,body{font-family:var(--font);background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+input[type=range]{accent-color:var(--or);width:100%;cursor:pointer}
+input[type=file]{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes glow{0%,100%{box-shadow:0 4px 18px rgba(244,123,0,.45)}50%{box-shadow:0 4px 28px rgba(244,123,0,.7)}}
+.fade{animation:fadeUp .3s ease}
 
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--tx);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
-}
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bd3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--bd2); }
-input[type=range] { accent-color: var(--or); width: 100%; cursor: pointer; }
-input[type=file] { display: none; }
+/* NAV */
+.nav{background:var(--dk);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100}
+.nav-left{display:flex;align-items:center;gap:13px}
+.nav-name{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.1}
+.nav-name span{color:var(--or)}
+.nav-tag{font-size:9px;color:var(--or);letter-spacing:.18em;text-transform:uppercase;font-weight:600;margin-top:2px}
+.nav-chip{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:20px;background:rgba(244,123,0,.15);color:var(--or);border:.5px solid rgba(244,123,0,.4);letter-spacing:.07em;font-weight:600}
 
-/* ═══════════════════════════════════════════════════════════
-   ANIMATIONS
-═══════════════════════════════════════════════════════════ */
-@keyframes spin    { to { transform: rotate(360deg); } }
-@keyframes fadeUp  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
-@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
-@keyframes pulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
-@keyframes progBar { 0%{background-position:0 0} 100%{background-position:48px 0} }
-@keyframes glow    { 0%,100%{box-shadow:0 4px 18px rgba(244,123,0,.45)} 50%{box-shadow:0 4px 28px rgba(244,123,0,.7)} }
+/* PAGE */
+.page{max-width:980px;margin:0 auto;padding:28px 18px 80px}
 
-.fade-up { animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
-.fade-in { animation: fadeIn .25s ease both; }
+/* STEPBAR */
+.stepbar{display:flex;align-items:center;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:14px 20px;margin-bottom:22px;box-shadow:var(--sh);overflow-x:auto;gap:0}
+.step-item{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.step-n{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .3s}
+.step-n.done{background:var(--or);color:#fff}
+.step-n.active{background:var(--dk);color:#fff}
+.step-n.idle{background:var(--bd);color:var(--tx3)}
+.step-l{font-size:12px;font-weight:600;white-space:nowrap}
+.step-l.active{color:var(--tx)}.step-l.idle{color:var(--tx3)}
+.step-line{flex:1;min-width:24px;height:2px;background:var(--bd);margin:0 8px;border-radius:1px;transition:background .3s}
+.step-line.done{background:var(--or)}
 
-/* ═══════════════════════════════════════════════════════════
-   NAVBAR
-═══════════════════════════════════════════════════════════ */
-.navbar {
-  background: var(--dk);
-  height: 66px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.nav-logo-wrap {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.nav-wordmark {}
-.nav-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -.03em;
-  line-height: 1.1;
-}
-.nav-name span { color: var(--or); }
-.nav-tagline {
-  font-size: 9px;
-  color: rgba(244,123,0,.7);
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin-top: 2px;
-}
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.nav-badge {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background: rgba(244,123,0,.12);
-  color: var(--or);
-  border: 1px solid rgba(244,123,0,.35);
-  letter-spacing: .07em;
-  font-weight: 500;
-}
-.nav-version {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: rgba(255,255,255,.25);
-  letter-spacing: .06em;
-}
+/* CARD */
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:18px;box-shadow:var(--sh)}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
 
-/* ═══════════════════════════════════════════════════════════
-   PAGE LAYOUT
-═══════════════════════════════════════════════════════════ */
-.page {
-  max-width: 1020px;
-  margin: 0 auto;
-  padding: 32px 20px 80px;
-}
+/* INSTR */
+.instr{background:linear-gradient(135deg,var(--orl),#FFE8C5);border:1px solid var(--orb);border-radius:var(--rs);padding:14px 16px;margin-bottom:18px}
+.instr-title{font-size:12px;font-weight:700;color:#8A4200;margin-bottom:9px}
+.instr-steps{display:flex;flex-direction:column;gap:6px}
+.instr-step{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:#6A3200;line-height:1.55}
+.instr-num{width:20px;height:20px;border-radius:50%;background:var(--or);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 
-/* ═══════════════════════════════════════════════════════════
-   STEP INDICATOR
-═══════════════════════════════════════════════════════════ */
-.step-bar {
-  display: flex;
-  align-items: center;
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--r);
-  padding: 16px 24px;
-  margin-bottom: 24px;
-  box-shadow: var(--sh);
-  overflow-x: auto;
-  gap: 0;
-}
-.step-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.step-circle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  transition: all .35s cubic-bezier(.22,1,.36,1);
-}
-.step-circle.done   { background: var(--or); color: #fff; }
-.step-circle.active { background: var(--dk); color: #fff; }
-.step-circle.idle   { background: var(--bd); color: var(--tx4); }
-.step-label {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: color .3s;
-}
-.step-label.active { color: var(--tx); }
-.step-label.idle   { color: var(--tx4); }
-.step-connector {
-  flex: 1;
-  min-width: 32px;
-  height: 2px;
-  background: var(--bd);
-  margin: 0 10px;
-  border-radius: 1px;
-  transition: background .5s;
-}
-.step-connector.done { background: var(--or); }
+/* UPLOAD */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.uslot{border:2px dashed var(--bd2);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;background:var(--sur2);min-height:210px;display:flex;flex-direction:column;position:relative}
+.uslot:hover,.uslot.drag{border-color:var(--or);background:var(--orl)}
+.uslot.filled{border-style:solid;border-color:var(--or);cursor:default;background:var(--sur)}
+.uslot-head{padding:9px 13px;display:flex;align-items:center;gap:7px;border-bottom:1px solid transparent}
+.uslot-head.bdc{background:#FFF0DC;border-color:#F5D080}
+.uslot-head.tdc{background:#E8F4FF;border-color:#B5D4F4}
+.ubadge{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.1em}
+.ubadge.bdc{background:var(--or);color:#fff}
+.ubadge.tdc{background:#185FA5;color:#fff}
+.uname{font-size:12px;font-weight:600;color:#3A3A3A}
+.uempty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:8px;text-align:center}
+.uicon{font-size:30px;opacity:.35}
+.udesc{font-size:11px;color:var(--tx3);font-family:var(--mono);line-height:1.6}
+.uhint{font-size:11px;color:var(--or);font-weight:600}
+.uprv{width:100%;height:210px;object-fit:cover;display:block}
+.urm{position:absolute;top:40px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:10}
+.urm:hover{background:rgba(192,35,26,.85)}
 
-/* ═══════════════════════════════════════════════════════════
-   CARDS
-═══════════════════════════════════════════════════════════ */
-.card {
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--rl);
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: var(--sh);
-}
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--bd);
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.card-body  { padding: 22px; }
+/* BUTTONS */
+button{font-family:var(--font);font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--rs);border:1px solid var(--bd2);cursor:pointer;background:var(--sur);color:var(--tx);transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+button:hover{background:var(--sur2)}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
+.btn-dark{background:var(--dk);color:#fff;border-color:transparent}
+.btn-dark:hover{background:var(--dk2)}
+.btn-ghost{color:var(--tx3);border-color:var(--bd);background:transparent}
+.btn-ghost:hover{color:var(--tx);background:var(--sur2)}
+.btn-orange{background:var(--or);color:#fff;border-color:transparent}
+.btn-orange:hover{background:var(--ord)}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:8px}
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-/* ═══════════════════════════════════════════════════════════
-   INSTRUCTION BOX
-═══════════════════════════════════════════════════════════ */
-.instr-box {
-  background: linear-gradient(135deg, #FFF8F0, #FFECD8);
-  border: 1px solid var(--orb);
-  border-radius: var(--rs);
-  padding: 16px 18px;
-  margin-bottom: 20px;
-}
-.instr-title { font-size: 12px; font-weight: 700; color: #8A4200; margin-bottom: 10px; }
-.instr-steps { display: flex; flex-direction: column; gap: 7px; }
-.instr-step  { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: #6A3200; line-height: 1.55; }
-.instr-num   {
-  width: 21px; height: 21px; border-radius: 50%;
-  background: var(--or); color: #fff;
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 1px;
-}
+/* CTA */
+.cta{background:linear-gradient(135deg,#141414,#222);border-radius:var(--r);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border:1px solid rgba(255,255,255,.06)}
+.cta-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.01em}
+.cta-sub{font-size:11px;color:rgba(255,255,255,.35);font-family:var(--mono)}
+.btn-analyze{background:var(--or);color:#fff;border:none;font-size:15px;font-weight:800;padding:14px 30px;border-radius:11px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;box-shadow:0 4px 18px rgba(244,123,0,.5);letter-spacing:.01em;font-family:var(--font);animation:glow 3s ease-in-out infinite}
+.btn-analyze:hover{background:var(--ord);transform:translateY(-2px);box-shadow:0 6px 26px rgba(244,123,0,.65);animation:none}
+.btn-analyze:active{transform:translateY(0)}
+.btn-analyze:disabled{background:#3A3A3A;color:rgba(255,255,255,.3);box-shadow:none;transform:none;cursor:not-allowed;animation:none}
+.btn-analyze .arr{font-size:18px;transition:transform .2s}
+.btn-analyze:not(:disabled):hover .arr{transform:translateX(4px)}
 
-/* ═══════════════════════════════════════════════════════════
-   UPLOAD SLOTS
-═══════════════════════════════════════════════════════════ */
-.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+/* JOINT MARKING */
+.joint-wrap{position:relative;background:#000;cursor:crosshair;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.joint-wrap.done-marking{cursor:default}
+#joint-canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#joint-img{width:100%;display:block;max-height:520px;object-fit:contain}
+.joint-status{padding:13px 18px;background:var(--sur2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+.joint-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.joint-tag-row{padding:10px 18px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--bd)}
+.jtag{display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;transition:all .2s}
 
-.upload-slot {
-  border: 2px dashed var(--bd2);
-  border-radius: var(--r);
-  overflow: hidden;
-  cursor: pointer;
-  transition: all .22s cubic-bezier(.22,1,.36,1);
-  background: var(--sur2);
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.upload-slot:hover, .upload-slot.drag { border-color: var(--or); background: var(--orl); }
-.upload-slot.filled { border-style: solid; border-color: var(--or); background: var(--sur); cursor: default; }
+/* PROGRESS */
+.prog-card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
+.prog-head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--or);margin-bottom:14px}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(244,123,0,.2);border-top-color:var(--or);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.pbg{height:5px;background:var(--bd);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.pbf{height:100%;background:linear-gradient(90deg,var(--or),#FFB347);border-radius:3px;transition:width .5s ease}
+.plog{font-family:var(--mono);font-size:11px;line-height:2;max-height:110px;overflow-y:auto}
+.log-ok{color:var(--ok)}.log-info{color:var(--or)}.log-mute{color:var(--tx3)}.log-err{color:var(--er)}
 
-.slot-badge-bar {
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid transparent;
-}
-.slot-badge-bar.bdc { background: #FFF0DC; border-color: #F5D080; }
-.slot-badge-bar.tdc { background: #E8F4FF; border-color: #B5D4F4; }
+/* ERROR */
+.err-box{background:var(--er-bg);border:1px solid var(--er-bd);border-radius:var(--rs);padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--er);margin-bottom:16px;display:none}
 
-.slot-badge {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
-  letter-spacing: .1em;
-}
-.slot-badge.bdc { background: var(--or); color: #fff; }
-.slot-badge.tdc { background: #1A6AAD; color: #fff; }
+/* REPORT */
+.rpt-head{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.rpt-title{font-size:18px;font-weight:800;letter-spacing:-.025em}
+.rpt-meta{font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:3px}
+.opill{font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;letter-spacing:.06em}
+.tabs{display:flex;border-bottom:2px solid var(--bd);padding:0 20px;background:var(--sur);overflow-x:auto;gap:2px}
+.tab-btn{font-family:var(--font);font-size:12px;font-weight:600;padding:12px 16px;border:none;border-bottom:2.5px solid transparent;cursor:pointer;background:transparent;color:var(--tx3);margin-bottom:-2px;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:var(--or)}.tab-btn.on{color:var(--or);border-bottom-color:var(--or)}
+.tpanel{display:none;padding:20px}.tpanel.on{display:block}
 
-.slot-name { font-size: 12px; font-weight: 600; color: #3A3A3A; }
+/* ANGLE CARDS */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.acard{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s}
+.acard:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.acard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:var(--ac)}
+.a-lbl{font-family:var(--mono);font-size:9px;color:var(--tx4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.a-val{font-size:32px;font-weight:800;color:var(--ac);line-height:1;letter-spacing:-.04em;margin-bottom:3px}
+.a-tgt{font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:5px}
+.a-st{font-size:11px;font-weight:600;color:var(--ac)}
+.a-bar{height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin-top:8px}
+.a-barf{height:100%;background:var(--ac);border-radius:2px;transition:width 1.4s ease}
 
-.slot-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  gap: 8px;
-  text-align: center;
-}
-.slot-icon    { font-size: 32px; opacity: .35; }
-.slot-desc    { font-size: 11px; color: var(--tx3); font-family: var(--mono); line-height: 1.6; }
-.slot-hint    { font-size: 11px; color: var(--or); font-weight: 600; }
-.slot-preview { width: 100%; height: 220px; object-fit: cover; display: block; }
+/* SUMMARY */
+.sum-card{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px}
+.sum-lbl{font-family:var(--mono);font-size:9px;color:var(--tx4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px}
+.sum-txt{font-size:13px;line-height:1.85;color:var(--tx2)}
 
-.slot-remove {
-  position: absolute;
-  top: 44px;
-  right: 10px;
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  background: rgba(0,0,0,.65);
-  color: #fff;
-  border: none;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
-  z-index: 10;
-  font-family: var(--font);
-}
-.slot-remove:hover { background: rgba(192,35,26,.85); transform: scale(1.1); }
+/* SKELETON */
+.sk-wrap{background:#0C0E13;border-radius:var(--r);overflow:hidden;margin-bottom:12px;border:1px solid #1E2230}
+.sk-bar{background:#111420;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.06)}
+.sk-bar span{font-family:var(--mono);font-size:10px;color:#505878}
+.sk-bar .sk-tag{color:var(--or);font-weight:600}
+#sk-canvas{width:100%;display:block}
+.sk-legend{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx3)}
 
-.pick-btn {
-  margin-top: 10px;
-  background: var(--or);
-  color: #fff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: all .15s;
-}
-.pick-btn:hover { background: var(--ord); }
+/* RECS */
+.rec-list{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.rec-item{display:flex;gap:13px;padding:14px 18px;border-bottom:1px solid var(--bd);transition:background .15s}
+.rec-item:last-child{border-bottom:none}
+.rec-item:hover{background:var(--sur2)}
+.rec-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.rec-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.rec-desc{font-size:12px;color:var(--tx2);line-height:1.65}
+.rec-action{display:inline-block;margin-top:7px;font-family:var(--mono);font-size:10px;color:#8A4200;background:var(--orl);padding:3px 10px;border-radius:5px;border:1px solid var(--orb);font-weight:600}
 
-/* ═══════════════════════════════════════════════════════════
-   CTA BANNER + ANALYZE BUTTON
-═══════════════════════════════════════════════════════════ */
-.cta-banner {
-  background: linear-gradient(135deg, #111111, #1E1E1E);
-  border-radius: var(--r);
-  padding: 22px 26px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-  border: 1px solid rgba(255,255,255,.06);
-}
-.cta-info {}
-.cta-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -.02em;
-  margin-bottom: 4px;
-}
-.cta-sub {
-  font-size: 11px;
-  color: rgba(255,255,255,.35);
-  font-family: var(--mono);
-  letter-spacing: .04em;
-}
+/* ACTIONS */
+.rpt-actions{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--bd);background:var(--sur2);flex-wrap:wrap}
 
-.analyze-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--or);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 16px;
-  font-weight: 800;
-  padding: 15px 34px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  letter-spacing: -.01em;
-  white-space: nowrap;
-  transition: all .22s cubic-bezier(.22,1,.36,1);
-  box-shadow: 0 4px 20px rgba(244,123,0,.5);
-  animation: glow 3s ease-in-out infinite;
-  user-select: none;
-  -webkit-user-select: none;
-  text-decoration: none;
-}
-.analyze-btn:hover {
-  background: var(--ord);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(244,123,0,.65);
-  animation: none;
-}
-.analyze-btn:active {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 12px rgba(244,123,0,.4);
-}
-.analyze-btn.disabled {
-  background: #3A3A3A;
-  color: rgba(255,255,255,.3);
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-  animation: none;
-  pointer-events: none;
-}
-.analyze-btn .btn-arrow {
-  font-size: 20px;
-  transition: transform .22s;
-}
-.analyze-btn:hover .btn-arrow { transform: translateX(5px); }
+/* FOOTER */
+.footer{background:var(--dk);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.footer-l{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.25)}
+.footer-r{font-size:13px;font-weight:700;color:var(--or)}
 
-/* ═══════════════════════════════════════════════════════════
-   PROGRESS CARD
-═══════════════════════════════════════════════════════════ */
-.progress-card {
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--rl);
-  padding: 24px;
-  box-shadow: var(--sh);
-  margin-bottom: 20px;
-}
-.progress-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.progress-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--or);
-}
-.spinner {
-  width: 18px; height: 18px;
-  border: 2.5px solid rgba(244,123,0,.2);
-  border-top-color: var(--or);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  flex-shrink: 0;
-}
-.progress-bar-bg {
-  height: 6px;
-  background: var(--bd);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--or), #FFB347, var(--or));
-  background-size: 48px 100%;
-  border-radius: 3px;
-  transition: width .5s cubic-bezier(.22,1,.36,1);
-  animation: progBar 1s linear infinite;
-}
-.progress-bar-fill.done { animation: none; background: var(--ok); }
-.progress-log {
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 2;
-  max-height: 130px;
-  overflow-y: auto;
-}
-.log-ok   { color: var(--ok); }
-.log-info { color: var(--or); }
-.log-mute { color: var(--tx3); }
-.log-err  { color: var(--er); }
-
-/* ═══════════════════════════════════════════════════════════
-   ERROR BOX
-═══════════════════════════════════════════════════════════ */
-.error-box {
-  background: var(--er-bg);
-  border: 1px solid var(--er-bd);
-  border-radius: var(--rs);
-  padding: 12px 16px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--er);
-  margin-bottom: 18px;
-  display: none;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════════════════════ */
-.btn {
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--rs);
-  border: 1px solid var(--bd2);
-  cursor: pointer;
-  background: var(--sur);
-  color: var(--tx);
-  transition: all .15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  text-decoration: none;
-}
-.btn:hover  { background: var(--sur2); }
-.btn:active { transform: scale(.97); }
-.btn-dark   { background: var(--dk); color: #fff; border-color: transparent; }
-.btn-dark:hover { background: var(--dk2); }
-.btn-ghost  { color: var(--tx3); border-color: var(--bd); background: transparent; }
-.btn-ghost:hover { color: var(--tx); background: var(--sur2); }
-.btn-orange { background: var(--or); color: #fff; border-color: transparent; }
-.btn-orange:hover { background: var(--ord); }
-.btn-sm     { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
-.btn-row    { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-/* ═══════════════════════════════════════════════════════════
-   REPORT — HEADER
-═══════════════════════════════════════════════════════════ */
-.report-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--bd);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.report-title { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
-.report-meta  { font-family: var(--mono); font-size: 10px; color: var(--tx3); margin-top: 3px; }
-.overall-pill {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 6px 16px;
-  border-radius: 20px;
-  letter-spacing: .06em;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════════════════ */
-.tab-bar {
-  display: flex;
-  border-bottom: 2px solid var(--bd);
-  padding: 0 22px;
-  background: var(--sur);
-  overflow-x: auto;
-  gap: 2px;
-}
-.tab-btn {
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 13px 18px;
-  border: none;
-  border-bottom: 2.5px solid transparent;
-  cursor: pointer;
-  background: transparent;
-  color: var(--tx3);
-  margin-bottom: -2px;
-  white-space: nowrap;
-  transition: all .18s;
-  letter-spacing: -.005em;
-}
-.tab-btn:hover { color: var(--or); }
-.tab-btn.on    { color: var(--or); border-bottom-color: var(--or); }
-.tab-panel     { display: none; padding: 22px; }
-.tab-panel.on  { display: block; }
-
-/* ═══════════════════════════════════════════════════════════
-   ANGLE CARDS
-═══════════════════════════════════════════════════════════ */
-.angle-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.angle-card {
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--r);
-  padding: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow .22s, transform .22s;
-}
-.angle-card:hover { box-shadow: var(--sh2); transform: translateY(-2px); }
-.angle-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 4px;
-  background: var(--ac, #ccc);
-}
-.angle-lbl { font-family: var(--mono); font-size: 9px; color: var(--tx4); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px; }
-.angle-val { font-size: 36px; font-weight: 800; color: var(--ac, #ccc); line-height: 1; letter-spacing: -.05em; margin-bottom: 3px; }
-.angle-tgt { font-family: var(--mono); font-size: 10px; color: var(--tx3); margin-bottom: 6px; }
-.angle-st  { font-size: 12px; font-weight: 600; color: var(--ac, #ccc); }
-.angle-bar { height: 4px; background: var(--bd); border-radius: 2px; overflow: hidden; margin-top: 10px; }
-.angle-bar-fill { height: 100%; background: var(--ac, #ccc); border-radius: 2px; transition: width 1.4s cubic-bezier(.22,1,.36,1); }
-
-/* ═══════════════════════════════════════════════════════════
-   SUMMARY
-═══════════════════════════════════════════════════════════ */
-.summary-card {
-  background: var(--sur2);
-  border: 1px solid var(--bd);
-  border-radius: var(--r);
-  padding: 18px 20px;
-}
-.summary-lbl  { font-family: var(--mono); font-size: 9px; color: var(--tx4); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
-.summary-text { font-size: 14px; line-height: 1.85; color: var(--tx2); }
-
-/* ═══════════════════════════════════════════════════════════
-   SKELETON CANVAS
-═══════════════════════════════════════════════════════════ */
-.skeleton-wrap {
-  background: #0C0E13;
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 14px;
-  border: 1px solid #1E2230;
-}
-.skeleton-topbar {
-  background: #111420;
-  padding: 11px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-.skeleton-topbar span { font-family: var(--mono); font-size: 10px; color: #505878; letter-spacing: .06em; }
-.skeleton-topbar .sk-tag { color: var(--or); font-weight: 500; }
-#sk-canvas { width: 100%; display: block; }
-.skeleton-legend {
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--r);
-  padding: 12px 16px;
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.leg-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--tx3); }
-
-/* joint angle detail grid */
-.joint-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
-}
-.jd-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--sur2);
-  border: 1px solid var(--bd);
-  border-radius: var(--rs);
-}
-.jd-dot  { width: 10px; height: 10px; border-radius: 50%; background: #FF3B3B; flex-shrink: 0; }
-.jd-name { font-size: 11px; color: var(--tx3); font-family: var(--mono); flex: 1; }
-.jd-val  { font-size: 16px; font-weight: 700; }
-.jd-st   { font-size: 10px; font-weight: 600; margin-left: 3px; }
-
-/* ═══════════════════════════════════════════════════════════
-   RECS
-═══════════════════════════════════════════════════════════ */
-.rec-list { background: var(--sur); border: 1px solid var(--bd); border-radius: var(--r); overflow: hidden; }
-.rec-item {
-  display: flex;
-  gap: 14px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--bd);
-  transition: background .15s;
-}
-.rec-item:last-child { border-bottom: none; }
-.rec-item:hover { background: var(--sur2); }
-.rec-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
-.rec-body {}
-.rec-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-.rec-desc  { font-size: 12px; color: var(--tx2); line-height: 1.65; }
-.rec-action {
-  display: inline-block;
-  margin-top: 8px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: #8A4200;
-  background: var(--orl);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--orb);
-  font-weight: 500;
-  letter-spacing: .04em;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SIM
-═══════════════════════════════════════════════════════════ */
-.sim-layout {
-  background: var(--sur);
-  border: 1px solid var(--bd);
-  border-radius: var(--r);
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 210px 1fr;
-}
-.sim-controls {
-  padding: 18px;
-  border-right: 1px solid var(--bd);
-  background: var(--sur2);
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-}
-.sim-ctrl-title { font-family: var(--mono); font-size: 9px; color: var(--tx4); letter-spacing: .12em; text-transform: uppercase; }
-.slider-group {}
-.slider-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--tx3);
-  margin-bottom: 6px;
-}
-.slider-val { color: var(--or); font-weight: 500; font-size: 12px; }
-.sim-view { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-.sim-canvases { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.sim-canvas-wrap { position: relative; }
-.sim-canvas-tag {
-  position: absolute;
-  top: 8px; left: 9px;
-  font-family: var(--mono);
-  font-size: 9px;
-  background: rgba(0,0,0,.72);
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: .08em;
-  font-weight: 500;
-}
-#sim-before, #sim-after { width: 100%; display: block; background: #0C0E13; border-radius: var(--rs); }
-.pill-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.pill-card { background: var(--sur2); border: 1px solid var(--bd); border-radius: var(--rs); padding: 10px; text-align: center; }
-.pill-name { font-family: var(--mono); font-size: 9px; color: var(--tx4); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
-.pill-vals { display: flex; align-items: center; justify-content: center; gap: 5px; font-family: var(--mono); font-size: 12px; }
-.pill-before { color: var(--tx4); }
-.pill-arrow  { color: var(--bd3); font-size: 10px; }
-.pill-after  { font-weight: 600; }
-
-/* ═══════════════════════════════════════════════════════════
-   REPORT ACTIONS
-═══════════════════════════════════════════════════════════ */
-.report-actions {
-  display: flex;
-  gap: 10px;
-  padding: 16px 22px;
-  border-top: 1px solid var(--bd);
-  background: var(--sur2);
-  flex-wrap: wrap;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   FOOTER
-═══════════════════════════════════════════════════════════ */
-.footer {
-  background: var(--dk);
-  padding: 20px 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 40px;
-}
-.footer-l { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.25); letter-spacing: .04em; }
-.footer-r { font-size: 13px; font-weight: 700; color: var(--or); letter-spacing: -.01em; }
-
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════════ */
-@media (max-width: 660px) {
-  .navbar { padding: 0 16px; }
-  .page   { padding: 20px 14px 60px; }
-  .upload-grid  { grid-template-columns: 1fr; }
-  .sim-layout   { grid-template-columns: 1fr; }
-  .sim-controls { border-right: none; border-bottom: 1px solid var(--bd); }
-  .sim-canvases { grid-template-columns: 1fr; }
-  .cta-banner   { flex-direction: column; }
-  .analyze-btn  { width: 100%; justify-content: center; }
-  .angle-grid   { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-  .nav-version  { display: none; }
+@media(max-width:620px){
+  .upload-grid{grid-template-columns:1fr}
+  .cta{flex-direction:column}
+  .btn-analyze{width:100%;justify-content:center}
+  .nav{padding:0 14px}
+  .page{padding:16px 12px 60px}
 }
 </style>
 </head>
 <body>
 
-<!-- ── NAVBAR ───────────────────────────────────────── -->
-<nav class="navbar">
-  <div class="nav-brand">
-    <div class="nav-logo-wrap">
-      <svg width="40" height="35" viewBox="0 0 40 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="25" height="25" rx="3" fill="#F47B00"/>
-        <circle cx="12.5" cy="12.5" r="7.5" fill="white"/>
-        <rect y="27" width="25" height="8" rx="2" fill="rgba(255,255,255,.12)"/>
-        <rect x="28" width="8" height="22" rx="2" fill="rgba(255,255,255,.85)"/>
-        <rect x="28" y="27" width="8" height="8" rx="2" fill="#F47B00"/>
-      </svg>
-    </div>
-    <div class="nav-wordmark">
+<nav class="nav">
+  <div class="nav-left">
+    <svg width="40" height="35" viewBox="0 0 40 35" fill="none">
+      <rect width="25" height="25" rx="3" fill="#F47B00"/>
+      <circle cx="12.5" cy="12.5" r="7.5" fill="white"/>
+      <rect y="27" width="25" height="8" rx="2" fill="rgba(255,255,255,.12)"/>
+      <rect x="28" width="8" height="22" rx="2" fill="rgba(255,255,255,.85)"/>
+      <rect x="28" y="27" width="8" height="8" rx="2" fill="#F47B00"/>
+    </svg>
+    <div>
       <div class="nav-name"><span>Orange</span> Fruit</div>
-      <div class="nav-tagline">Free Your Fit</div>
+      <div class="nav-tag">Free Your Fit</div>
     </div>
   </div>
-  <div class="nav-right">
-    <div class="nav-version">v3.0</div>
-    <div class="nav-badge">BOTTOM-UP AI FIT</div>
-  </div>
+  <div class="nav-chip">BOTTOM-UP AI FIT</div>
 </nav>
 
-<!-- ── PAGE ─────────────────────────────────────────── -->
 <div class="page" id="page">
-
-  <!-- STEP BAR -->
-  <div class="step-bar" id="step-bar"></div>
-
-  <!-- ERROR -->
-  <div class="error-box" id="error-box"></div>
-
-  <!-- VIEWS -->
-  <div id="view-1"></div>
-  <div id="view-2" style="display:none"></div>
-  <div id="view-3" style="display:none"></div>
-  <div id="view-4" style="display:none"></div>
-
+  <div class="stepbar" id="stepbar"></div>
+  <div class="err-box" id="err-box"></div>
+  <div id="v1"></div>
+  <div id="v2" style="display:none"></div>
+  <div id="v3" style="display:none"></div>
+  <div id="v4" style="display:none"></div>
 </div>
 
-<!-- ── FOOTER ───────────────────────────────────────── -->
 <footer class="footer">
-  <div class="footer-l">Orange Fruit AI BikeFit Analyzer · v3.0 · Bottom-Up Protocol · Powered by Gemini 1.5 Flash</div>
+  <div class="footer-l">Orange Fruit AI BikeFit · v3.0 · Bottom-Up Protocol · Powered by Gemini Flash</div>
   <div class="footer-r">Orange Fruit — Free Your Fit</div>
 </footer>
 
-<!-- ══════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════ -->
 <script>
-// ── CONSTANTS ────────────────────────────────────────
+// ══ CONSTANTS ═══════════════════════════════════════════
 const TG = {
-  knee_extension:  { min:25, max:35,  lbl:'膝伸展 BDC', desc:'下死點膝蓋伸展角' },
-  knee_flexion:    { min:90, max:110, lbl:'膝屈曲 TDC', desc:'上死點膝蓋屈曲角' },
-  hip_angle:       { min:55, max:75,  lbl:'髖關節閉合', desc:'軀幹與大腿夾角'   },
-  ankle_max:       { min:90, max:115, lbl:'腳踝背屈',   desc:'最大背屈角度'     },
-  shoulder_wrist:  { min:75, max:95,  lbl:'肩→腕角',   desc:'肩部到手腕角度'   },
-  back_angle:      { min:35, max:50,  lbl:'背部角度',   desc:'背部與地面夾角'   },
+  knee_extension: {min:25,max:35,lbl:'膝伸展 BDC'},
+  knee_flexion:   {min:90,max:110,lbl:'膝屈曲 TDC'},
+  hip_angle:      {min:55,max:75,lbl:'髖關節閉合'},
+  ankle_max:      {min:90,max:115,lbl:'腳踝背屈'},
+  shoulder_wrist: {min:75,max:95,lbl:'肩→腕角'},
+  back_angle:     {min:35,max:50,lbl:'背部角度'},
 };
+const COL = {ok:'#0B8A5C',wk:'#B86A00',er:'#C0231A',na:'#ADADAA'};
+const BG  = {ok:'rgba(11,138,92,.1)',wk:'rgba(184,106,0,.1)',er:'rgba(192,35,26,.1)',na:'#f5f5f5'};
+const LL  = {ok:'✓ 達標',wk:'△ 偏差',er:'✕ 超出',na:'—'};
 
-const C = {
-  ok: '#0B8A5C', wk: '#B86A00', er: '#C0231A', na: '#ADADAA'
-};
-const CBG = {
-  ok: 'rgba(11,138,92,.1)', wk: 'rgba(184,106,0,.1)', er: 'rgba(192,35,26,.1)', na: '#f5f5f5'
-};
-const LL = { ok:'✓ 達標', wk:'△ 偏差', er:'✕ 超出', na:'—' };
+const JOINTS = [
+  {key:'neck',     lbl:'頸肩交接', color:'#FFD700', desc:'頸部與肩膀交接處'},
+  {key:'shoulder', lbl:'肩峰',     color:'#FF6B6B', desc:'肩膀最高骨性突起'},
+  {key:'hip',      lbl:'髖關節',   color:'#FF6B6B', desc:'褲腰側面最突出骨頭'},
+  {key:'elbow',    lbl:'手肘',     color:'#4ECDC4', desc:'手臂彎折中心點'},
+  {key:'wrist',    lbl:'手腕',     color:'#4ECDC4', desc:'握把附近手腕彎折處'},
+  {key:'knee',     lbl:'膝關節',   color:'#FF6B6B', desc:'大腿與小腿交接中心'},
+  {key:'ankle',    lbl:'踝關節',   color:'#FF6B6B', desc:'腳踝骨頭中心'},
+  {key:'foot',     lbl:'腳掌前端', color:'#FFD700', desc:'腳趾/腳掌最前端'},
+];
 
-function gst(v, t) {
-  if (v == null) return 'na';
-  if (v >= t.min && v <= t.max) return 'ok';
-  if (v < t.min - 10 || v > t.max + 10) return 'er';
-  return 'wk';
+function gst(v,t){
+  if(v==null)return'na';
+  if(v>=t.min&&v<=t.max)return'ok';
+  if(v<t.min-10||v>t.max+10)return'er';
+  return'wk';
 }
 
-// ── STATE ────────────────────────────────────────────
+// ══ STATE ════════════════════════════════════════════════
 const S = {
-  step: 1,
-  bdcURL: null, bdcImg: null,
-  tdcURL: null, tdcImg: null,
-  joints: null,   // 使用者手動標示的關節座標 {neck,shoulder,hip,elbow,wrist,knee,ankle,foot}
-  result: null,
-  error: '',
-  tab: 'angles',
-  pct: 0,
-  logs: [],
-  sim: { sh:0, sb:0, st:0, sl:0 },
+  step:1,
+  bdcURL:null, bdcImg:null,
+  tdcURL:null, tdcImg:null,
+  joints:null,
+  result:null,
+  error:'',
+  tab:'angles',
+  pct:0, logs:[],
 };
 
-function set(p) {
-  Object.assign(S, p);
-  render();
-  afterRender();
+function set(p){Object.assign(S,p);render();postRender();}
+function postRender(){
+  if(S.step===2)setTimeout(initJointCanvas,80);
+  if(S.tab==='visual'&&S.result&&S.bdcImg)requestAnimationFrame(drawSkeleton);
 }
 
-function afterRender() {
-  if (S.tab === 'visual' && S.result && S.bdcImg) requestAnimationFrame(drawSkeleton);
-  if (S.tab === 'sim'    && S.result && S.bdcImg)  requestAnimationFrame(drawSim);
+// ══ RENDER ═══════════════════════════════════════════════
+function render(){
+  renderStepbar();
+  renderErr();
+  document.getElementById('v1').style.display=S.step===1?'':'none';
+  document.getElementById('v2').style.display=S.step===2?'':'none';
+  document.getElementById('v3').style.display=S.step===3?'':'none';
+  document.getElementById('v4').style.display=S.step===4?'':'none';
+  if(S.step===1)renderV1();
+  if(S.step===2)renderV2();
+  if(S.step===3)renderV3();
+  if(S.step===4)renderV4();
 }
 
-// ── RENDER ───────────────────────────────────────────
-function render() {
-  renderStepBar();
-  renderError();
-  document.getElementById('view-1').style.display = S.step === 1 ? '' : 'none';
-  document.getElementById('view-2').style.display = S.step === 2 ? '' : 'none';
-  document.getElementById('view-3').style.display = S.step === 3 ? '' : 'none';
-  document.getElementById('view-4').style.display = S.step === 4 ? '' : 'none';
-  if (S.step === 1) renderUpload();
-  if (S.step === 2) renderJoints();
-  if (S.step === 3) renderProgress();
-  if (S.step === 4) renderReport();
-}
-
-function renderStepBar() {
-  const steps = [
-    { n:1, l:'上傳照片' },
-    { n:2, l:'標示關節' },
-    { n:3, l:'AI 分析' },
-    { n:4, l:'查看報告' },
-  ];
-  document.getElementById('step-bar').innerHTML = steps.map((s, i) => {
-    const cs = S.step > s.n ? 'done' : S.step === s.n ? 'active' : 'idle';
-    const cl = S.step >= s.n ? 'active' : 'idle';
-    const conn = i < steps.length - 1
-      ? `<div class="step-connector${S.step > s.n ? ' done' : ''}"></div>` : '';
-    return `<div class="step-item">
-      <div class="step-circle ${cs}">${S.step > s.n ? '✓' : s.n}</div>
-      <div class="step-label ${cl}">${s.l}</div>
-    </div>${conn}`;
+function renderStepbar(){
+  const steps=[{n:1,l:'上傳照片'},{n:2,l:'標示關節'},{n:3,l:'AI 分析'},{n:4,l:'查看報告'}];
+  document.getElementById('stepbar').innerHTML=steps.map((s,i)=>{
+    const cs=S.step>s.n?'done':S.step===s.n?'active':'idle';
+    const cl=S.step>=s.n?'active':'idle';
+    const conn=i<3?`<div class="step-line${S.step>s.n?' done':''}"></div>`:'';
+    return`<div class="step-item"><div class="step-n ${cs}">${S.step>s.n?'✓':s.n}</div><div class="step-l ${cl}">${s.l}</div></div>${conn}`;
   }).join('');
 }
 
-function renderError() {
-  const el = document.getElementById('error-box');
-  if (S.error) { el.style.display = ''; el.textContent = '⚠ ' + S.error; }
-  else el.style.display = 'none';
+function renderErr(){
+  const el=document.getElementById('err-box');
+  if(S.error){el.style.display='';el.textContent='⚠ '+S.error;}
+  else el.style.display='none';
 }
 
-// ── VIEW 1: UPLOAD ───────────────────────────────────
-function renderUpload() {
-  const el = document.getElementById('view-1');
-  const can  = S.bdcURL || S.tdcURL;
-  const has2 = S.bdcURL && S.tdcURL;
+// ══ V1: UPLOAD ══════════════════════════════════════════
+function renderV1(){
+  const can=S.bdcURL||S.tdcURL;
+  const has2=S.bdcURL&&S.tdcURL;
 
-  function slot(key, cls, badge, name, icon, desc) {
-    const url = S[key + 'URL'];
-    return `<div class="upload-slot${url ? ' filled' : ''}" id="slot-${key}" data-slot="${key}">
-      <div class="slot-badge-bar ${cls}">
-        <div class="slot-badge ${cls}">${badge}</div>
-        <div class="slot-name">${name}</div>
-      </div>
+  function slot(key,cls,badge,name,icon,desc){
+    const url=S[key+'URL'];
+    return`<div class="uslot${url?' filled':''}" id="slot-${key}" data-slot="${key}">
+      <div class="uslot-head ${cls}"><div class="ubadge ${cls}">${badge}</div><div class="uname">${name}</div></div>
       ${url
-        ? `<img class="slot-preview" src="${url}" alt="${key}">
-           <button class="slot-remove" data-rm="${key}">✕</button>`
-        : `<div class="slot-empty">
-             <div class="slot-icon">${icon}</div>
-             <div class="slot-desc">${desc}</div>
-             <div class="slot-hint">點擊或拖放</div>
-             <button class="pick-btn" data-pick="${key}">選擇圖片</button>
-           </div>`
-      }
+        ?`<img class="uprv" src="${url}"><button class="urm" data-rm="${key}">✕</button>`
+        :`<div class="uempty"><div class="uicon">${icon}</div><div class="udesc">${desc}</div><div class="uhint">點擊或拖放</div>
+           <button style="margin-top:8px;background:var(--or);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)" data-pick="${key}">選擇圖片</button></div>`}
       <input type="file" accept="image/*" id="fi-${key}">
     </div>`;
   }
 
-  el.innerHTML = `
-  <div class="card fade-up">
-    <div class="card-head">
-      <div class="card-title">📸 上傳騎乘照片</div>
-      <span style="font-family:var(--mono);font-size:10px;color:var(--tx3)">JPG / PNG · 側面拍攝</span>
-    </div>
+  document.getElementById('v1').innerHTML=`
+  <div class="card fade">
+    <div class="card-head"><div class="card-title">📸 上傳騎乘照片</div><span style="font-family:var(--mono);font-size:10px;color:var(--tx3)">JPG / PNG · 側面拍攝</span></div>
     <div class="card-body">
-      <div class="instr-box">
-        <div class="instr-title">📌 拍攝說明</div>
+      <div class="instr">
+        <div class="instr-title">📌 使用說明</div>
         <div class="instr-steps">
-          <div class="instr-step"><div class="instr-num">1</div><div>從<b>側面</b>拍攝（左側或右側均可，兩張保持同一側）</div></div>
-          <div class="instr-step"><div class="instr-num">2</div><div><b>BDC 圖</b>：曲柄在 6 點鐘下死點，用於測量膝伸展角與座高</div></div>
-          <div class="instr-step"><div class="instr-num">3</div><div><b>TDC 圖</b>：曲柄在 1 點鐘近上死點，用於測量膝屈曲角與髖角</div></div>
-          <div class="instr-step"><div class="instr-num">4</div><div>兩張照片上傳完成後，按下方橙色按鈕開始人工智慧分析（約 15-25 秒）</div></div>
+          <div class="instr-step"><div class="instr-num">1</div><div>上傳 BDC（曲柄 6 點鐘）和 TDC（曲柄 1 點鐘）兩張側面照片</div></div>
+          <div class="instr-step"><div class="instr-num">2</div><div>在照片上依序點擊 8 個關節點（系統會引導你）</div></div>
+          <div class="instr-step"><div class="instr-num">3</div><div>AI 根據你標示的精確位置計算角度並生成報告</div></div>
         </div>
       </div>
-
       <div class="upload-grid">
-        ${slot('bdc','bdc','BDC','下死點 — 曲柄 6 點鐘','🦵','曲柄朝下<br>測量膝伸展角度')}
-        ${slot('tdc','tdc','TDC','近上死點 — 曲柄 1 點鐘','🔄','曲柄朝前上方<br>測量膝屈曲與髖角')}
+        ${slot('bdc','bdc','BDC','下死點 — 曲柄 6 點鐘','🦵','曲柄朝下<br>測量膝伸展角')}
+        ${slot('tdc','tdc','TDC','近上死點 — 曲柄 1 點鐘','🔄','曲柄朝前上<br>測膝屈曲與髖角')}
       </div>
-
-      <div class="cta-banner">
-        <div class="cta-info">
-          <div class="cta-title">${has2 ? '✓ 兩張照片就緒，可以開始分析' : can ? '已上傳一張，建議補上另一張以獲得完整分析' : '請上傳騎乘側面照片'}</div>
-          <div class="cta-sub">${has2 ? 'BDC + TDC 雙幀 · Bottom-Up 完整分析' : can ? '單幀模式 · 部分角度可能無法測量' : 'Bottom-Up Protocol · Gemini 1.5 Flash · 免費使用'}</div>
+      <div class="cta">
+        <div>
+          <div class="cta-title">${has2?'✓ 兩張照片就緒，下一步標示關節':can?'已上傳一張，建議補上另一張':'請上傳騎乘側面照片'}</div>
+          <div class="cta-sub">Bottom-Up Protocol · Gemini AI Vision</div>
         </div>
-        <div class="analyze-btn${can ? '' : ' disabled'}" id="analyze-btn" role="button" tabindex="${can ? '0' : '-1'}">
-          <span>開始人工智慧分析</span>
-          <span class="btn-arrow">→</span>
-        </div>
+        <button class="btn-analyze" id="btn-to-joints" ${can?'':'disabled'}>
+          <span>下一步：標示關節</span><span class="arr">→</span>
+        </button>
       </div>
     </div>
   </div>`;
 
-  bindUploadEvents();
+  bindV1();
 }
 
-function bindUploadEvents() {
-  // Analyze button
-  const btn = document.getElementById('analyze-btn');
-  if (btn && !btn.classList.contains('disabled')) {
-    btn.onclick = goToJointMarking;
-    btn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') startAnalysis(); };
-  }
-
-  // Pick buttons
-  document.querySelectorAll('[data-pick]').forEach(b => {
-    b.onclick = e => { e.stopPropagation(); document.getElementById('fi-' + b.dataset.pick)?.click(); };
+function bindV1(){
+  document.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();document.getElementById('fi-'+b.dataset.pick)?.click();}));
+  ['bdc','tdc'].forEach(k=>{
+    const fi=document.getElementById('fi-'+k);
+    if(fi)fi.onchange=e=>{if(e.target.files[0])loadImg(k,e.target.files[0]);};
   });
-
-  // File inputs
-  ['bdc', 'tdc'].forEach(key => {
-    const fi = document.getElementById('fi-' + key);
-    if (fi) fi.onchange = e => { if (e.target.files[0]) loadImg(key, e.target.files[0]); };
+  document.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();S[b.dataset.rm+'URL']=null;S[b.dataset.rm+'Img']=null;set({error:''});}));
+  document.querySelectorAll('[data-slot]').forEach(slot=>{
+    const k=slot.dataset.slot;
+    slot.addEventListener('click',()=>{if(!S[k+'URL'])document.getElementById('fi-'+k)?.click();});
+    slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('drag');});
+    slot.addEventListener('dragleave',()=>slot.classList.remove('drag'));
+    slot.addEventListener('drop',e=>{e.preventDefault();slot.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadImg(k,f);});
   });
-
-  // Remove buttons
-  document.querySelectorAll('[data-rm]').forEach(b => {
-    b.onclick = e => {
-      e.stopPropagation();
-      const k = b.dataset.rm;
-      S[k + 'URL'] = null; S[k + 'Img'] = null;
-      set({ error: '' });
-    };
-  });
-
-  // Slot click + drag-drop
-  document.querySelectorAll('[data-slot]').forEach(slot => {
-    const key = slot.dataset.slot;
-    slot.onclick = () => { if (!S[key + 'URL']) document.getElementById('fi-' + key)?.click(); };
-    slot.ondragover  = e => { e.preventDefault(); slot.classList.add('drag'); };
-    slot.ondragleave = () => slot.classList.remove('drag');
-    slot.ondrop = e => {
-      e.preventDefault();
-      slot.classList.remove('drag');
-      const f = e.dataTransfer.files[0];
-      if (f) loadImg(key, f);
-    };
-  });
+  document.getElementById('btn-to-joints')?.addEventListener('click',()=>set({step:2,error:'',joints:{}}));
 }
 
-// ── VIEW 2: PROGRESS ─────────────────────────────────
-function renderProgress() {
-  const el = document.getElementById('view-2');
-  const pvs = [];
-  if (S.bdcURL) pvs.push(`<div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px;letter-spacing:.06em">BDC — 下死點</div>
-    <img src="${S.bdcURL}" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--bd)">
-  </div>`);
-  if (S.tdcURL) pvs.push(`<div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px;letter-spacing:.06em">TDC — 近上死點</div>
-    <img src="${S.tdcURL}" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--bd)">
-  </div>`);
+// ══ V2: JOINT MARKING ════════════════════════════════════
+function renderV2(){
+  const joints=S.joints||{};
+  const done=Object.keys(joints).length;
+  const allDone=done>=JOINTS.length;
+  const cur=JOINTS[Math.min(done,JOINTS.length-1)];
 
-  const logHTML = S.logs.map(l => `<div class="log-${l.c}">${esc(l.m)}</div>`).join('');
-
-  el.innerHTML = `
-  <div class="progress-card fade-in">
-    <div class="progress-header">
-      <div class="spinner"></div>
-      <div class="progress-title">人工智慧分析進行中…</div>
-    </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill${S.pct >= 100 ? ' done' : ''}" id="pbar" style="width:${S.pct}%"></div>
-    </div>
-    <div class="progress-log" id="plog">${logHTML}</div>
-  </div>
-  <div class="card fade-in" style="margin-top:0">
-    <div class="card-head">
-      <div class="card-title">🖼 已上傳照片</div>
-      <button class="btn btn-ghost btn-sm" id="btn-back">← 返回</button>
-    </div>
-    <div class="card-body">
-      <div style="display:grid;grid-template-columns:${pvs.length > 1 ? '1fr 1fr' : '1fr'};gap:16px">
-        ${pvs.join('')}
-      </div>
-    </div>
-  </div>`;
-
-  document.getElementById('btn-back')?.addEventListener('click', () =>
-    set({ step: S.joints ? 2 : 1, error:'', logs:[], pct:0 })
-  );
-}
-
-// ── JOINT MARKING FUNCTIONS ──────────────────────────────────
-function goToJointMarking() {
-  if (!S.bdcURL && !S.tdcURL) { set({ error: '請先上傳至少一張照片' }); return; }
-  set({ step: 2, error: '', joints: null });
-}
-
-const JOINT_ORDER = [
-  { key: 'neck',     label: '頸肩交接',   color: '#FFD700', desc: '頸部與肩膀交接處' },
-  { key: 'shoulder', label: '肩峰',       color: '#FF6B6B', desc: '肩膀最高骨性突起' },
-  { key: 'hip',      label: '髖關節',     color: '#FF6B6B', desc: '側面褲腰最突出的骨頭' },
-  { key: 'elbow',    label: '手肘',       color: '#4ECDC4', desc: '手臂彎折中心點' },
-  { key: 'wrist',    label: '手腕',       color: '#4ECDC4', desc: '握把附近手腕彎折處' },
-  { key: 'knee',     label: '膝關節',     color: '#FF6B6B', desc: '大腿與小腿交接中心' },
-  { key: 'ankle',    label: '踝關節',     color: '#FF6B6B', desc: '腳踝骨頭中心' },
-  { key: 'foot',     label: '腳掌前端',   color: '#FFD700', desc: '腳趾/腳掌最前端' },
-];
-
-function renderJoints() {
-  const el = document.getElementById('view-2');
-  const joints = S.joints || {};
-  const doneCount = Object.keys(joints).length;
-  const currentIdx = doneCount < JOINT_ORDER.length ? doneCount : JOINT_ORDER.length - 1;
-  const allDone = doneCount >= JOINT_ORDER.length;
-  const current = JOINT_ORDER[currentIdx];
-
-  el.innerHTML = `
-  <div class="card fade-up">
+  document.getElementById('v2').innerHTML=`
+  <div class="card fade">
     <div class="card-head">
       <div class="card-title">🎯 標示關節點</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${doneCount}/${JOINT_ORDER.length} 完成</span>
-        <button class="btn btn-ghost btn-sm" id="btn-back-joints">← 返回</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${done}/${JOINTS.length}</span>
+        <button class="btn-ghost btn-sm" id="btn-back-j">← 返回</button>
       </div>
     </div>
-    <div style="padding:14px 20px;background:var(--sur2);border-bottom:1px solid var(--bd)">
+    <div class="joint-status">
       ${allDone
-        ? `<div style="display:flex;align-items:center;gap:10px;color:var(--ok);font-weight:600;font-size:14px">✓ 所有關節點已標示完成！</div>`
-        : `<div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:50%;background:${current.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${currentIdx+1}</div>
-            <div>
-              <div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${current.label}</span></div>
-              <div style="font-size:12px;color:var(--tx3);margin-top:2px">${current.desc}</div>
-            </div>
-           </div>`
-      }
+        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 所有關節點已標示完成！</div>`
+        :`<div class="joint-dot" style="background:${cur.color}">${done+1}</div>
+          <div><div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${cur.lbl}</span></div>
+          <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
     </div>
-    <div style="position:relative;background:#000;cursor:${allDone?'default':'crosshair'}" id="joint-canvas-wrap">
-      <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:520px;object-fit:contain">
-      <canvas id="joint-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+    <div class="joint-wrap${allDone?' done-marking':''}" id="joint-wrap">
+      <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:540px;object-fit:contain">
+      <canvas id="joint-canvas"></canvas>
     </div>
-    <div style="padding:14px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" id="btn-undo-joint" ${doneCount===0?'disabled':''}>↩ 撤銷上一點</button>
-      <button class="btn btn-ghost btn-sm" id="btn-reset-joints" ${doneCount===0?'disabled':''}>✕ 全部重置</button>
+    <div style="padding:13px 18px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-ghost btn-sm" id="btn-undo" ${done===0?'disabled':''}>↩ 撤銷</button>
+      <button class="btn-ghost btn-sm" id="btn-reset-j" ${done===0?'disabled':''}>✕ 重置</button>
       <div style="flex:1"></div>
-      <button class="btn btn-dark" id="btn-analyze-joints" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 24px">
+      <button class="btn-dark" id="btn-to-analyze" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 22px">
         開始 AI 分析 →
       </button>
     </div>
-    <div style="padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:6px;flex-wrap:wrap">
-      ${JOINT_ORDER.map((j,i) => {
-        const done = joints[j.key];
-        return `<div style="display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;background:${done?j.color+'22':'var(--sur2)'};border:1px solid ${done?j.color:'var(--bd)'}">
-          <div style="width:8px;height:8px;border-radius:50%;background:${done?j.color:'var(--bd2)'}"></div>
-          <span style="color:${done?'var(--tx)':'var(--tx3)'}">${j.label}</span>
-          ${done?'<span style="color:'+j.color+'">✓</span>':''}
+    <div class="joint-tag-row">
+      ${JOINTS.map((j,i)=>{
+        const isDone=joints[j.key];
+        return`<div class="jtag" style="background:${isDone?j.color+'22':'var(--sur2)'};border:1px solid ${isDone?j.color:'var(--bd)'}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${isDone?j.color:'var(--bd2)'}"></div>
+          <span style="color:${isDone?'var(--tx)':'var(--tx3)'};font-size:11px">${j.lbl}</span>
+          ${isDone?`<span style="color:${j.color};font-size:10px">✓</span>`:''}
         </div>`;
       }).join('')}
     </div>
   </div>`;
 
-  // 事件綁定
-  document.getElementById('btn-back-joints')?.addEventListener('click', () =>
-    set({ step:1, error:'', joints:null })
-  );
-  document.getElementById('btn-undo-joint')?.addEventListener('click', () => {
-    const keys = Object.keys(S.joints||{});
-    if (keys.length === 0) return;
-    const newJoints = {...S.joints};
-    delete newJoints[keys[keys.length-1]];
-    set({ joints: newJoints });
+  document.getElementById('btn-back-j')?.addEventListener('click',()=>set({step:1,joints:{},error:''}));
+  document.getElementById('btn-undo')?.addEventListener('click',()=>{
+    const keys=Object.keys(S.joints||{});
+    if(!keys.length)return;
+    const nj={...S.joints};delete nj[keys[keys.length-1]];set({joints:nj});
   });
-  document.getElementById('btn-reset-joints')?.addEventListener('click', () =>
-    set({ joints: {} })
-  );
-  document.getElementById('btn-analyze-joints')?.addEventListener('click', () => {
-    if (allDone) startAnalysis();
-  });
+  document.getElementById('btn-reset-j')?.addEventListener('click',()=>set({joints:{}}));
+  document.getElementById('btn-to-analyze')?.addEventListener('click',()=>{if(allDone)startAnalysis();});
+}
 
-  // Canvas 繪製與點擊
-  const img = document.getElementById('joint-img');
-  const canvas = document.getElementById('joint-canvas');
-  const wrap = document.getElementById('joint-canvas-wrap');
-  if (!canvas || !img) return;
+function initJointCanvas(){
+  const img=document.getElementById('joint-img');
+  const canvas=document.getElementById('joint-canvas');
+  const wrap=document.getElementById('joint-wrap');
+  if(!canvas||!img||!wrap)return;
 
-  function resizeCanvas() {
-    const rect = img.getBoundingClientRect();
-    const wrect = wrap.getBoundingClientRect();
-    canvas.width  = rect.width;
-    canvas.height = rect.height;
-    canvas.style.left = (rect.left - wrect.left) + 'px';
-    canvas.style.top  = (rect.top  - wrect.top)  + 'px';
-    drawJoints();
+  function resize(){
+    const ir=img.getBoundingClientRect();
+    const wr=wrap.getBoundingClientRect();
+    canvas.width=ir.width;
+    canvas.height=ir.height;
+    canvas.style.width=ir.width+'px';
+    canvas.style.height=ir.height+'px';
+    canvas.style.left=(ir.left-wr.left)+'px';
+    canvas.style.top=(ir.top-wr.top)+'px';
+    drawJointCanvas();
   }
 
-  function drawJoints() {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const W = canvas.width, H = canvas.height;
-    const j = S.joints || {};
+  function drawJointCanvas(){
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const j=S.joints||{};
 
-    // 畫已標示的連線
-    const conns = [['neck','shoulder'],['shoulder','hip'],['shoulder','elbow'],['elbow','wrist'],['hip','knee'],['knee','ankle'],['ankle','foot']];
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = Math.max(2, W/300);
-    ctx.lineCap = 'round';
-    for (const [a,b] of conns) {
-      if (!j[a]||!j[b]) continue;
-      ctx.beginPath();
-      ctx.moveTo(j[a].x*W, j[a].y*H);
-      ctx.lineTo(j[b].x*W, j[b].y*H);
-      ctx.stroke();
-    }
+    // 連線
+    ctx.strokeStyle='#FFFFFF';ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
+    [['neck','shoulder'],['shoulder','hip'],['shoulder','elbow'],['elbow','wrist'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b])=>{
+      if(!j[a]||!j[b])return;
+      ctx.beginPath();ctx.moveTo(j[a].x*W,j[a].y*H);ctx.lineTo(j[b].x*W,j[b].y*H);ctx.stroke();
+    });
 
-    // 畫關節點
-    for (let i=0; i<JOINT_ORDER.length; i++) {
-      const jd = JOINT_ORDER[i];
-      if (!j[jd.key]) continue;
-      const px = j[jd.key].x * W, py = j[jd.key].y * H;
-      const r = Math.max(7, W/70);
+    // 關節點
+    JOINTS.forEach((jd,i)=>{
+      if(!j[jd.key])return;
+      const px=j[jd.key].x*W,py=j[jd.key].y*H;
+      const r=Math.max(8,W/75);
       ctx.save();
-      ctx.beginPath(); ctx.arc(px,py,r+3,0,Math.PI*2);
-      ctx.fillStyle = jd.color+'33'; ctx.fill();
-      ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
-      ctx.fillStyle = jd.color; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth=1.5; ctx.stroke();
-      ctx.fillStyle='#fff'; ctx.font=\`bold \${Math.max(10,W/60)}px monospace\`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(i+1, px, py);
+      ctx.beginPath();ctx.arc(px,py,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
+      ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(10,W/65)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(i+1,px,py);
       ctx.restore();
-    }
-
-    // 高亮下一個要點的位置提示圈（脈動效果不可行，用靜態圈）
-    if (!allDone && current) {
-      const t = Date.now()/1000;
-      const pulse = 0.7 + 0.3*Math.sin(t*4);
-      ctx.save();
-      ctx.strokeStyle = current.color;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5,5]);
-      ctx.globalAlpha = pulse;
-      ctx.beginPath(); ctx.arc(W*0.5, H*0.5, 30, 0, Math.PI*2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-  }
-
-  // 點擊事件
-  if (!allDone) {
-    canvas.addEventListener('click', function handler(e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / canvas.width;
-      const y = (e.clientY - rect.top)  / canvas.height;
-      const currentJ = JOINT_ORDER[Object.keys(S.joints||{}).length];
-      if (!currentJ) return;
-      const newJoints = {...(S.joints||{}), [currentJ.key]: {x, y}};
-      set({ joints: newJoints });
     });
   }
 
-  img.onload = resizeCanvas;
-  if (img.complete) setTimeout(resizeCanvas, 50);
-  window.addEventListener('resize', resizeCanvas);
-}
+  const allDone=Object.keys(S.joints||{}).length>=JOINTS.length;
 
-// ── VIEW 3: REPORT ───────────────────────────────────
-function renderReport() {
-  if (!S.result) return;
-  const el = document.getElementById('view-3');
-  const r   = S.result;
-  const ang = r.angles;
-  const oc  = r.overall === 'good' ? C.ok : r.overall === 'needs_adjustment' ? C.wk : C.er;
-  const ol  = r.overall === 'good' ? '✓ 姿勢良好' : r.overall === 'needs_adjustment' ? '⚠ 需要調整' : '✕ 需要改善';
-
-  // ── ANGLE CARDS ──
-  const angleCards = Object.entries(TG).map(([k, t]) => {
-    const v   = ang[k];
-    const st  = gst(v, t);
-    const col = C[st];
-    const pct = v != null ? Math.min(100, Math.max(0, ((v - t.min) / (t.max - t.min)) * 100)) : 0;
-    return `<div class="angle-card" style="--ac:${col}">
-      <div class="angle-lbl">${t.lbl}</div>
-      <div class="angle-val">${v != null ? v + '°' : '—'}</div>
-      <div class="angle-tgt">目標 ${t.min}–${t.max}°</div>
-      <div class="angle-st">${LL[st]}</div>
-      <div class="angle-bar"><div class="angle-bar-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-
-  // ── JOINT DETAIL ──
-  const jmap = [
-    { key:'knee_extension',  lbl:'膝 BDC' },
-    { key:'hip_angle',       lbl:'髖關節' },
-    { key:'shoulder_wrist',  lbl:'肩→腕' },
-    { key:'ankle_max',       lbl:'腳踝'   },
-  ];
-  const jdHTML = jmap.map(ja => {
-    const v = ang[ja.key]; const t = TG[ja.key];
-    const st = gst(v, t); const col = C[st];
-    return `<div class="jd-item">
-      <div class="jd-dot"></div>
-      <div class="jd-name">${ja.lbl}</div>
-      <div class="jd-val" style="color:${col}">${v != null ? v + '°' : '—'}</div>
-      <div class="jd-st" style="color:${col}">${LL[st]}</div>
-    </div>`;
-  }).join('');
-
-  // ── RECS ──
-  const recs = [];
-  const addRec = (ico, st, title, desc, act) => recs.push({ ico, st, title, desc, act });
-
-  const ankle = ang.ankle_max;
-  if (ankle != null) {
-    if      (ankle < 90)  addRec('🦶','er','Layer 1：腳踝背屈不足',  `腳踝角 ${ankle}° < 90°。建議 Cleat 後退 2-3mm，並加強踝關節伸展訓練。`, 'Cleat 後移 2-3mm');
-    else if (ankle > 115) addRec('🦶','wk','Layer 1：腳踝過度背屈',  `腳踝角 ${ankle}° > 115°，Cleat 可能過後。確認前後位置。`, '確認 Cleat 位置');
-    else                  addRec('🦶','ok','Layer 1：腳踝背屈正常 ✓', `腳踝角 ${ankle}°，符合 90-115° 目標範圍，Cleat 位置良好。`, null);
-  }
-  const knee = ang.knee_extension;
-  if (knee != null) {
-    if (knee < 25) {
-      const d = Math.round((25 - knee) * 2.8);
-      addRec('🦵','er','Layer 2：座高過高', `膝伸展 ${knee}° < 25°，踩踏末端膝蓋過伸，骨盆可能左右搖擺。建議降低座高約 ${d}mm。`, `降座高 ${d}mm`);
-    } else if (knee > 35) {
-      const d = Math.round((knee - 35) * 2.8);
-      addRec('🦵','er','Layer 2：座高不足', `膝伸展 ${knee}° > 35°，踩踏效率降低，膝關節負擔增加。建議升高座高約 ${d}mm。`, `升座高 ${d}mm`);
-    } else {
-      addRec('🦵','ok','Layer 2：座高設定良好 ✓', `膝伸展 ${knee}°，位於 25-35° 最佳範圍，踩踏效率與膝關節健康達到平衡。`, null);
-    }
-  }
-  const hip = ang.hip_angle;
-  if (hip != null) {
-    if      (hip < 55) addRec('🍑','er','Layer 3：髖部過度閉合',  `髖角 ${hip}° < 55°，髖屈肌活動受限。建議縮短龍頭或降低把手高度。`, '縮短龍頭 / 降低把高');
-    else if (hip > 75) addRec('🍑','wk','Layer 3：上半身過度直立', `髖角 ${hip}° > 75°，氣動效益降低。考慮前移座位 5-10mm 或加長龍頭。`, '前移座位 5-10mm');
-    else               addRec('🍑','ok','Layer 3：髖關節角度理想 ✓',`髖角 ${hip}°，55-75° 最佳範圍，功率輸出與舒適性兼顧。`, null);
-  }
-  const sh = ang.shoulder_wrist;
-  if (sh != null) {
-    if      (sh < 75) addRec('💪','wk','Layer 4：手臂承重偏大', `肩腕角 ${sh}° < 75°，手腕與肩頸壓力較大。建議加墊片 5-10mm。`, '加墊片 5-10mm');
-    else if (sh > 95) addRec('💪','wk','Layer 4：把手位置偏高', `肩腕角 ${sh}° > 95°，影響氣動效益。可考慮減少墊片。`, '減墊片 5mm');
-    else              addRec('💪','ok','Layer 4/5：上半身姿勢良好 ✓',`肩腕角 ${sh}°，手臂承重分配合理，無明顯壓力風險。`, null);
-  }
-  if (ang.back_angle != null && ang.back_angle > 50)
-    addRec('🏋️','wk','Layer 5：背部角度偏大', `背部角度 ${ang.back_angle}° > 50°，上半身偏直立。競技需求可配合龍頭調整。`, '評估龍頭長度');
-
-  (r.bottom_up_issues || []).forEach(iss => {
-    if (iss && iss.length > 3) addRec('🤖','wk','AI 補充觀察', iss, null);
-  });
-
-  const recHTML = recs.map(rec => `<div class="rec-item">
-    <div class="rec-icon" style="background:${CBG[rec.st]}">${rec.ico}</div>
-    <div class="rec-body">
-      <div class="rec-title">${rec.title}</div>
-      <div class="rec-desc">${rec.desc}</div>
-      ${rec.act ? `<div class="rec-action">→ ${rec.act}</div>` : ''}
-    </div>
-  </div>`).join('');
-
-  // ── SIM ──
-  const sim = S.sim;
-  const sliders = [['sh','座高 (mm)',-30,30,1],['sb','座位前後 (mm)',-20,20,1],['st','龍頭高度 (mm)',-25,25,5],['sl','龍頭長度 (mm)',-20,20,5]];
-  const ctrlHTML = sliders.map(([k, lbl, mn, mx, sp]) => `<div class="slider-group">
-    <div class="slider-row">
-      <span>${lbl}</span>
-      <span class="slider-val">${sim[k] > 0 ? '+' : ''}${sim[k]}</span>
-    </div>
-    <input type="range" min="${mn}" max="${mx}" value="${sim[k]}" step="${sp}" data-sim="${k}">
-  </div>`).join('');
-
-  const pills = [
-    { k:'knee_extension',  adj: (ang.knee_extension  || 30) + Math.round(-sim.sh * 0.5) },
-    { k:'hip_angle',       adj: (ang.hip_angle        || 65) + Math.round(-sim.sb * 0.3) },
-    { k:'shoulder_wrist',  adj: (ang.shoulder_wrist   || 82) + Math.round(-sim.st * 0.15) },
-  ].map(({ k, adj }) => {
-    const t = TG[k]; const orig = ang[k]; if (!orig) return '';
-    const st = gst(adj, t); const col = C[st];
-    const diff = adj - orig;
-    const diffStr = diff > 0 ? '+'+diff+'°' : diff+'°';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E8E6">
-      <div style="font-size:11px;color:#7A7A78;font-family:var(--mono)">${t.lbl}</div>
-      <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px">
-        <span style="color:#ADADAA">${orig}°</span>
-        <span style="color:#D8D8D5">→</span>
-        <span style="color:${col};font-weight:700">${adj}°</span>
-        <span style="font-size:10px;color:${col}">(${diffStr})</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  const tabContent = {
-    angles: `<div class="angle-grid">${angleCards}</div>
-      <div class="summary-card">
-        <div class="summary-lbl">AI 分析摘要</div>
-        <div class="summary-text">${r.summary_zh || '—'}</div>
-      </div>`,
-
-    visual: `<div class="skeleton-wrap">
-        <div class="skeleton-topbar">
-          <span>關節標示 · BDC 下死點照片</span>
-          <span class="sk-tag">白線骨架 · 紅點關節 · 角度標示</span>
-        </div>
-        <canvas id="sk-canvas"></canvas>
-      </div>
-      <div class="skeleton-legend">
-        <div class="leg-item"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>骨架連線</div>
-        <div class="leg-item"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#FF3B3B"/></svg>關節點</div>
-        <div class="leg-item"><svg width="12" height="12"><circle cx="6" cy="6" r="5.5" fill="none" stroke="#0B8A5C" stroke-width="1.5"/></svg>達標</div>
-        <div class="leg-item"><svg width="12" height="12"><circle cx="6" cy="6" r="5.5" fill="none" stroke="#B86A00" stroke-width="1.5"/></svg>偏差</div>
-        <div class="leg-item"><svg width="12" height="12"><circle cx="6" cy="6" r="5.5" fill="none" stroke="#C0231A" stroke-width="1.5"/></svg>超出</div>
-      </div>
-      <div class="joint-detail-grid">${jdHTML}</div>`,
-
-    recs: `<div class="rec-list">${recHTML}</div>`,
-
-    sim: `<div class="sim-layout">
-      <div class="sim-controls">
-        <div class="sim-ctrl-title">即時調整模擬</div>
-        ${ctrlHTML}
-        <button class="btn btn-ghost btn-sm" id="btn-sim-reset" style="width:100%;justify-content:center">↺ 重置所有</button>
-        <div style="margin-top:8px;padding:10px;background:#F9F9F8;border-radius:8px;border:1px solid #E8E8E6">
-          <div style="font-family:var(--mono);font-size:9px;color:#ADADAA;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">角度預測變化</div>
-          ${pills}
-        </div>
-      </div>
-      <div class="sim-view" style="padding:16px;flex:1">
-        <div style="position:relative;border-radius:12px;overflow:hidden;background:#111">
-          <canvas id="sim-photo" style="width:100%;display:block"></canvas>
-          <div style="position:absolute;top:8px;left:10px;font-family:var(--mono);font-size:10px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:3px 8px;border-radius:4px">ADJUSTMENT PREVIEW</div>
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--tx3);text-align:center;font-family:var(--mono)">
-          橙色箭頭 = 建議調整方向 · 長度 = 調整幅度
-        </div>
-      </div>
-    </div>`,
+  canvas.onclick=function(e){
+    if(allDone)return;
+    const r=canvas.getBoundingClientRect();
+    const x=(e.clientX-r.left)/canvas.width;
+    const y=(e.clientY-r.top)/canvas.height;
+    const curJ=JOINTS[Object.keys(S.joints||{}).length];
+    if(!curJ)return;
+    set({joints:{...(S.joints||{}),[curJ.key]:{x,y}}});
   };
 
-  el.innerHTML = `
-  <div class="card fade-up">
-    <div class="report-header">
-      <div>
-        <div class="report-title">Fit 分析報告</div>
-        <div class="report-meta">${new Date().toLocaleString('zh-TW')} · 信心度 ${r.confidence || '—'}%</div>
-      </div>
-      <div class="overall-pill" style="background:${oc}18;color:${oc};border:1.5px solid ${oc}50">${ol}</div>
+  img.onload=resize;
+  if(img.complete)setTimeout(resize,50);
+  else img.addEventListener('load',resize);
+  window.addEventListener('resize',resize);
+}
+
+// ══ V3: PROGRESS ════════════════════════════════════════
+function renderV3(){
+  const pvs=[];
+  if(S.bdcURL)pvs.push(`<div><div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px">BDC</div><img src="${S.bdcURL}" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--bd)"></div>`);
+  if(S.tdcURL)pvs.push(`<div><div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px">TDC</div><img src="${S.tdcURL}" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--bd)"></div>`);
+  const logHTML=S.logs.map(l=>`<div class="log-${l.c}">${l.m}</div>`).join('');
+
+  document.getElementById('v3').innerHTML=`
+  <div class="prog-card fade">
+    <div class="prog-head"><div class="spinner"></div>AI 分析進行中…</div>
+    <div class="pbg"><div class="pbf" id="pbf" style="width:${S.pct}%"></div></div>
+    <div class="plog" id="plog">${logHTML}</div>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div class="card-head"><div class="card-title">🖼 已上傳照片</div><button class="btn-ghost btn-sm" id="btn-back-a">← 返回</button></div>
+    <div class="card-body"><div style="display:grid;grid-template-columns:${pvs.length>1?'1fr 1fr':'1fr'};gap:14px">${pvs.join('')}</div></div>
+  </div>`;
+
+  document.getElementById('btn-back-a')?.addEventListener('click',()=>set({step:2,error:'',logs:[],pct:0}));
+}
+
+// ══ V4: REPORT ══════════════════════════════════════════
+function renderV4(){
+  if(!S.result)return;
+  const r=S.result,ang=r.angles;
+  const oc=r.overall==='good'?COL.ok:r.overall==='needs_adjustment'?COL.wk:COL.er;
+  const ol=r.overall==='good'?'✓ 姿勢良好':r.overall==='needs_adjustment'?'⚠ 需要調整':'✕ 需要改善';
+
+  const angCards=Object.entries(TG).map(([k,t])=>{
+    const v=ang[k],s=gst(v,t),col=COL[s];
+    const pct=v!=null?Math.min(100,Math.max(0,((v-t.min)/(t.max-t.min))*100)):0;
+    return`<div class="acard" style="--ac:${col}"><div class="a-lbl">${t.lbl}</div><div class="a-val">${v!=null?v+'°':'—'}</div><div class="a-tgt">目標 ${t.min}–${t.max}°</div><div class="a-st">${LL[s]}</div><div class="a-bar"><div class="a-barf" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+
+  const recs=[];
+  function addRec(ico,st,title,desc,act){recs.push({ico,st,title,desc,act});}
+  const ankle=ang.ankle_max;
+  if(ankle!=null){if(ankle<90)addRec('🦶','er','Layer 1：腳踝背屈不足',`腳踝角 ${ankle}° < 90°，建議 Cleat 後退 2-3mm。`,'Cleat 後移 2-3mm');else if(ankle>115)addRec('🦶','wk','Layer 1：腳踝過度背屈',`腳踝角 ${ankle}° > 115°，確認 Cleat 位置。`,'確認 Cleat');else addRec('🦶','ok','Layer 1：腳踝正常 ✓',`腳踝角 ${ankle}°，符合 90-115° 目標。`,null);}
+  const knee=ang.knee_extension;
+  if(knee!=null){if(knee<25){const d=Math.round((25-knee)*2.8);addRec('🦵','er','Layer 2：座高過高',`膝伸展 ${knee}° < 25°，建議降座高 ${d}mm。`,`降座高 ${d}mm`);}else if(knee>35){const d=Math.round((knee-35)*2.8);addRec('🦵','er','Layer 2：座高不足',`膝伸展 ${knee}° > 35°，建議升座高 ${d}mm。`,`升座高 ${d}mm`);}else addRec('🦵','ok','Layer 2：座高良好 ✓',`膝伸展 ${knee}°，25-35° 最佳範圍。`,null);}
+  const hip=ang.hip_angle;
+  if(hip!=null){if(hip<55)addRec('🍑','er','Layer 3：髖部過閉',`髖角 ${hip}° < 55°，縮短龍頭或降低把高。`,'縮短龍頭');else if(hip>75)addRec('🍑','wk','Layer 3：上半身過直',`髖角 ${hip}° > 75°，考慮前移座位。`,'前移座位');else addRec('🍑','ok','Layer 3：髖角理想 ✓',`髖角 ${hip}°，55-75° 範圍。`,null);}
+  const sh=ang.shoulder_wrist;
+  if(sh!=null){if(sh<75)addRec('💪','wk','Layer 4：手臂承重偏大',`肩腕角 ${sh}° < 75°，建議加墊片 5-10mm。`,'加墊片');else if(sh>95)addRec('💪','wk','Layer 4：把手偏高',`肩腕角 ${sh}° > 95°，可減墊片。`,'減墊片');else addRec('💪','ok','Layer 4/5：上半身良好 ✓',`肩腕角 ${sh}°，承重合理。`,null);}
+  (r.bottom_up_issues||[]).forEach(s=>{if(s&&s.length>3)addRec('🤖','wk','AI 補充觀察',s,null);});
+  const recHTML=recs.map(rc=>`<div class="rec-item"><div class="rec-icon" style="background:${BG[rc.st]}">${rc.ico}</div><div><div class="rec-title">${rc.title}</div><div class="rec-desc">${rc.desc}</div>${rc.act?`<div class="rec-action">→ ${rc.act}</div>`:''}</div></div>`).join('');
+
+  const tabContent={
+    angles:`<div class="agrid">${angCards}</div><div class="sum-card"><div class="sum-lbl">AI 分析摘要</div><div class="sum-txt">${r.summary_zh||'—'}</div></div>`,
+    visual:`<div class="sk-wrap"><div class="sk-bar"><span>關節標示 · BDC 照片</span><span class="sk-tag">白線骨架 · 彩色關節點</span></div><canvas id="sk-canvas"></canvas></div>
+      <div class="sk-legend">
+        <div class="leg-item"><svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>骨架</div>
+        <div class="leg-item"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4.5" fill="#FF6B6B"/></svg>關節點</div>
+      </div>`,
+    recs:`<div class="rec-list">${recHTML}</div>`,
+  };
+
+  document.getElementById('v4').innerHTML=`
+  <div class="card fade">
+    <div class="rpt-head">
+      <div><div class="rpt-title">Fit 分析報告</div><div class="rpt-meta">${new Date().toLocaleString('zh-TW')} · 信心度 ${r.confidence||'—'}%</div></div>
+      <div class="opill" style="background:${oc}18;color:${oc};border:1.5px solid ${oc}55">${ol}</div>
     </div>
-
-    <div class="tab-bar">
-      ${[['angles','📐 角度分析'],['visual','🦴 關節標示'],['recs','💡 調整建議']].map(([id, lbl]) =>
-        `<button class="tab-btn${S.tab === id ? ' on' : ''}" data-tab="${id}">${lbl}</button>`
-      ).join('')}
+    <div class="tabs">
+      ${[['angles','📐 角度分析'],['visual','🦴 關節標示'],['recs','💡 調整建議']].map(([id,lbl])=>`<button class="tab-btn${S.tab===id?' on':''}" data-tab="${id}">${lbl}</button>`).join('')}
     </div>
-
-    ${['angles','visual','recs'].map(id =>
-      `<div class="tab-panel${S.tab === id ? ' on' : ''}" id="tp-${id}">${tabContent[id]}</div>`
-    ).join('')}
-
-    <div class="report-actions">
-      <button class="btn btn-ghost btn-sm" id="btn-new">← 分析新照片</button>
-      <button class="btn btn-sm" id="btn-redo">重新分析</button>
-      <button class="btn btn-orange btn-sm" id="btn-export">📄 匯出報告</button>
+    ${['angles','visual','recs'].map(id=>`<div class="tpanel${S.tab===id?' on':''}" id="tp-${id}">${tabContent[id]}</div>`).join('')}
+    <div class="rpt-actions">
+      <button class="btn-ghost btn-sm" id="btn-new">← 新分析</button>
+      <button class="btn-sm" id="btn-redo">重新標示</button>
+      <button class="btn-orange btn-sm" id="btn-export">📄 匯出報告</button>
     </div>
   </div>`;
 
-  // Bind report events
-  document.querySelectorAll('.tab-btn[data-tab]').forEach(b =>
-    b.addEventListener('click', () => set({ tab: b.dataset.tab }))
-  );
-  document.getElementById('btn-new')?.addEventListener('click', resetAll);
-  document.getElementById('btn-redo')?.addEventListener('click', () => set({ step:1 }));
-  document.getElementById('btn-export')?.addEventListener('click', exportReport);
-  document.getElementById('btn-sim-reset')?.addEventListener('click', () =>
-    set({ sim: { sh:0, sb:0, st:0, sl:0 } })
-  );
-  document.querySelectorAll('[data-sim]').forEach(inp =>
-    inp.addEventListener('input', () =>
-      set({ sim: { ...S.sim, [inp.dataset.sim]: +inp.value } })
-    )
-  );
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(b=>b.addEventListener('click',()=>set({tab:b.dataset.tab})));
+  document.getElementById('btn-new')?.addEventListener('click',resetAll);
+  document.getElementById('btn-redo')?.addEventListener('click',()=>set({step:2,result:null,joints:{},tab:'angles'}));
+  document.getElementById('btn-export')?.addEventListener('click',exportReport);
 }
 
-// ── IMAGE LOAD ───────────────────────────────────────
-function loadImg(key, file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      S[key + 'Img'] = img;
-      set({ [key + 'URL']: e.target.result, error: '' });
-    };
-    img.src = e.target.result;
+// ══ IMAGE LOAD ═══════════════════════════════════════════
+function loadImg(key,file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{S[key+'Img']=img;set({[key+'URL']:e.target.result,error:''});};
+    img.src=e.target.result;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 }
 
-// ── ANALYSIS ─────────────────────────────────────────
-async function startAnalysis() {
-  if (!S.bdcURL && !S.tdcURL) { set({ error: '請先上傳至少一張照片' }); return; }
+// ══ ANALYSIS ═════════════════════════════════════════════
+async function startAnalysis(){
+  if(!S.bdcURL&&!S.tdcURL){set({error:'請先上傳照片'});return;}
 
-  // Switch to step 2 immediately
-  S.step = 2;
-  S.error = '';
-  S.pct   = 5;
-  S.logs  = [{ m: '▶ 照片就緒，準備傳送…', c: 'info' }];
+  S.step=3;S.error='';S.pct=5;S.logs=[{m:'▶ 準備傳送…',c:'info'}];
   render();
 
-  // Progress helpers — update DOM directly without full re-render
-  function addLog(m, c = 'info') {
-    S.logs.push({ m, c });
-    const el = document.getElementById('plog');
-    if (el) el.innerHTML = S.logs.map(l => `<div class="log-${l.c}">${esc(l.m)}</div>`).join('');
+  function addLog(m,c='info'){
+    S.logs.push({m,c});
+    const el=document.getElementById('plog');
+    if(el)el.innerHTML=S.logs.map(l=>`<div class="log-${l.c}">${l.m}</div>`).join('');
   }
-  function setPct(p) {
-    S.pct = p;
-    const el = document.getElementById('pbar');
-    if (el) el.style.width = p + '%';
-  }
+  function setPct(p){S.pct=p;const el=document.getElementById('pbf');if(el)el.style.width=p+'%';}
 
-  const has2 = S.bdcURL && S.tdcURL;
+  const has2=S.bdcURL&&S.tdcURL;
+  try{
+    addLog('⟳ 編碼圖片…','info');setPct(15);
+    const content=[];
+    if(S.bdcURL){content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:S.bdcURL.split(',')[1]}});content.push({type:'text',text:has2?'圖一 BDC（曲柄6點鐘下死點）：':'騎乘側面照片：'});}
+    if(S.tdcURL){content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:S.tdcURL.split(',')[1]}});content.push({type:'text',text:'圖二 TDC（曲柄1點鐘近上死點）：'});}
 
-  try {
-    addLog('⟳ 編碼圖片…', 'info'); setPct(15);
+    const skStr=JSON.stringify(S.joints||{});
+    content.push({type:'text',text:`你是Bikefit分析師。${has2?'圖一BDC(6點鐘)，圖二TDC(1點鐘)。':'分析此照片。'}
+關節座標已由使用者精確標示（直接使用，不要修改）：${skStr}
+根據照片和以上座標計算各角度。只回傳JSON，禁止markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":${skStr},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中>"}`});
 
-    const content = [];
-    if (S.bdcURL) {
-      content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data: S.bdcURL.split(',')[1] } });
-      content.push({ type:'text', text: has2 ? '圖一 BDC（曲柄 6 點鐘下死點）：' : '騎乘側面照片：' });
-    }
-    if (S.tdcURL) {
-      content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data: S.tdcURL.split(',')[1] } });
-      content.push({ type:'text', text: '圖二 TDC（曲柄 1 點鐘近上死點）：' });
-    }
-    content.push({ type:'text', text: buildPrompt(has2, S.joints) });
+    addLog('⟳ 傳送至 AI…','info');setPct(32);
 
-    addLog('⟳ 傳送至 AI 分析伺服器…', 'info'); setPct(32);
+    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gemini-flash',max_tokens:800,messages:[{role:'user',content}]})});
+    setPct(70);addLog('⟳ 解析結果…','info');
 
-    // ★ 呼叫 /api/analyze（Vercel Serverless proxy）
-    const resp = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gemini-1.5-flash',
-        max_tokens: 1200,
-        messages: [{ role: 'user', content }],
-      }),
-    });
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${resp.status}`);}
 
-    setPct(70); addLog('⟳ 解析生物力學結果…', 'info');
+    const data=await resp.json();
+    const raw=data.content.map(b=>b.text||'').join('');
+    const cleaned=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
 
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `伺服器錯誤 HTTP ${resp.status}`);
-    }
-
-    const data = await resp.json();
-    const raw  = data.content.map(b => b.text || '').join('');
-    // 清除 markdown
-    const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
     let parsed;
-    try {
-      // 嘗試完整解析
-      const m = cleaned.match(/\{[\s\S]*\}/);
-      if (!m) throw new Error('no json');
-      parsed = JSON.parse(m[0]);
-    } catch(e1) {
-      // JSON 截斷時：手動提取 angles
-      try {
-        const angStr = cleaned.match(/"angles"\s*:\s*\{([^}]+)\}/)?.[1];
-        if (!angStr) throw new Error('no angles');
-        const angles = {};
-        angStr.match(/"(\w+)"\s*:\s*([\d.]+|null)/g)?.forEach(kv => {
-          const [k,v] = kv.replace(/"/g,'').split(':').map(s=>s.trim());
-          angles[k] = v==='null'?null:parseInt(v);
+    try{
+      const m=cleaned.match(/\{[\s\S]*\}/);
+      if(!m)throw new Error('no json');
+      parsed=JSON.parse(m[0]);
+    }catch(e1){
+      // 截斷時只取 angles
+      try{
+        const angStr=cleaned.match(/"angles"\s*:\s*\{([^}]+)\}/)?.[1];
+        if(!angStr)throw new Error('no angles');
+        const angles={};
+        angStr.match(/"(\w+)"\s*:\s*([\d.]+|null)/g)?.forEach(kv=>{
+          const parts=kv.replace(/"/g,'').split(':').map(s=>s.trim());
+          angles[parts[0]]=parts[1]==='null'?null:parseInt(parts[1]);
         });
-        const overall = cleaned.match(/"overall"\s*:\s*"([^"]+)"/)?.[1] || 'needs_adjustment';
-        const conf    = parseInt(cleaned.match(/"confidence"\s*:\s*(\d+)/)?.[1]) || 70;
-        const summary = cleaned.match(/"summary_zh"\s*:\s*"([^"]+)"/)?.[1] || '分析完成，部分資料截斷。';
-        parsed = { angles, skeleton:{}, overall, confidence:conf, bottom_up_issues:[], summary_zh:summary };
-        addLog('⚠ 部分資料截斷，已提取角度資料', 'info');
-      } catch(e2) {
-        throw new Error('解析失敗，請重試。原始：' + raw.substring(0,150));
-      }
+        const overall=cleaned.match(/"overall"\s*:\s*"([^"]+)"/)?.[1]||'needs_adjustment';
+        const conf=parseInt(cleaned.match(/"confidence"\s*:\s*(\d+)/)?.[1])||75;
+        const summary=cleaned.match(/"summary_zh"\s*:\s*"([^"]+)"/)?.[1]||'分析完成。';
+        parsed={angles,skeleton:S.joints||{},overall,confidence:conf,bottom_up_issues:[],summary_zh:summary};
+        addLog('⚠ 部分資料已提取','info');
+      }catch(e2){throw new Error('解析失敗，請重試');}
     }
-    if (!parsed.angles) throw new Error('回傳格式不完整，請重試');
 
-    setPct(95); addLog('⟳ 生成報告…', 'info');
-    setPct(100); addLog('✓ 分析完成！', 'ok');
+    if(!parsed.angles)throw new Error('格式錯誤，請重試');
+    // 確保 skeleton 用使用者標示的
+    parsed.skeleton=S.joints||parsed.skeleton||{};
 
-    setTimeout(() => set({ result: parsed, step: 4, error: '', tab: 'angles' }), 800);
+    setPct(100);addLog('✓ 分析完成！','ok');
+    setTimeout(()=>set({result:parsed,step:4,error:'',tab:'angles'}),700);
 
-  } catch (err) {
-    addLog('✕ 錯誤：' + err.message, 'err');
-    setTimeout(() => set({ step:1, error: '分析失敗：' + err.message, logs:[], pct:0 }), 2500);
+  }catch(err){
+    addLog('✕ '+err.message,'err');
+    setTimeout(()=>set({step:2,error:'分析失敗：'+err.message,logs:[],pct:0}),2500);
   }
 }
 
-function buildPrompt(has2, joints) {
-  // 如果有手動標示的關節點，直接用，不讓 AI 猜
-  const skStr = joints
-    ? JSON.stringify(joints)
-    : '{"neck":{"x":0,"y":0},...}';
+// ══ SKELETON CANVAS ══════════════════════════════════════
+function drawSkeleton(){
+  const c=document.getElementById('sk-canvas');
+  if(!c||!S.bdcImg||!S.result)return;
+  const ctx=c.getContext('2d');
+  const IMG=S.bdcImg;
+  const cw=c.parentElement?.clientWidth||600;
+  const sc=cw/IMG.width;
+  c.width=Math.round(IMG.width*sc);
+  c.height=Math.round(IMG.height*sc);
+  const W=c.width,H=c.height;
 
-  return `你是Bikefit分析師。${has2?'圖一BDC(6點鐘下死點)，圖二TDC(1點鐘上死點)。':'分析此騎乘側面照片。'}
+  ctx.drawImage(IMG,0,0,W,H);
 
-關節座標已由使用者精確標示（直接使用這些座標，不要修改）：
-${skStr}
-
-根據以上照片和座標，計算各角度。只回傳JSON，禁止markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":${skStr},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中>"}`;
-}
-
-// ── SKELETON CANVAS ──────────────────────────────────
-function drawSkeleton() {
-  const c = document.getElementById('sk-canvas');
-  if (!c || !S.bdcImg || !S.result) return;
-  const ctx = c.getContext('2d');
-  const IMG = S.bdcImg;
-  const cw  = c.parentElement?.clientWidth || 600;
-  const sc  = cw / IMG.width;
-  c.width   = Math.round(IMG.width  * sc);
-  c.height  = Math.round(IMG.height * sc);
-  const W = c.width, H = c.height;
-
-  ctx.drawImage(IMG, 0, 0, W, H);
-
-  // 優先用使用者手動標示的關節點
-  const skUser = S.joints || {};
-  const skAI   = S.result?.skeleton || {};
-  const skFb   = estimateSkeleton(S.result?.angles || {}, W, H);
-  const sk = {};
-  for (const key of ['neck','shoulder','hip','elbow','wrist','knee','ankle','foot']) {
-    if (skUser[key]?.x != null)     sk[key] = skUser[key];
-    else if (skAI[key]?.x != null)  sk[key] = skAI[key];
-    else                            sk[key] = skFb[key];
+  // 使用使用者標示的關節點（最精確）
+  const sk=S.joints||S.result.skeleton||{};
+  const pts={};
+  for(const[n,co]of Object.entries(sk)){
+    if(co&&co.x!=null)pts[n]={x:co.x*W,y:co.y*H};
   }
 
-  // 座標換算
-  const pts = {};
-  for (const [name, co] of Object.entries(sk)) {
-    if (co && co.x != null && co.y != null)
-      pts[name] = { x: co.x * W, y: co.y * H };
-  }
+  const lw=Math.max(2.5,W/200);
 
-  const lw    = Math.max(2.5, W / 200);
-  const dotR  = Math.max(7,   W / 95);
-  const ringR = dotR + Math.max(3, W / 170);
-  const arcR  = Math.max(22,  W / 28);
-  const fs    = Math.max(12,  W / 42);
-
-  // White bones with shadow
-  ctx.save();
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth   = lw;
-  ctx.lineCap     = 'round';
-  ctx.lineJoin    = 'round';
-  ctx.shadowColor = 'rgba(0,0,0,.55)';
-  ctx.shadowBlur  = 5;
-  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
-   ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a, b]) => {
-    if (!pts[a] || !pts[b]) return;
-    ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke();
+  // 白色骨架連線
+  ctx.save();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
+  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b])=>{
+    if(!pts[a]||!pts[b])return;
+    ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke();
   });
-  ctx.shadowBlur = 0;
-  ctx.restore();
+  ctx.shadowBlur=0;ctx.restore();
 
-  // Angle arcs + labels
-  const ang = S.result.angles;
-  [['knee','hip','ankle','knee_extension'],
-   ['hip','shoulder','knee','hip_angle'],
-   ['shoulder','elbow','hip','shoulder_wrist'],
-   ['ankle','knee','foot','ankle_max']].forEach(([j, a, b, key]) => {
-    if (!pts[j] || !pts[a] || !pts[b]) return;
-    const v = ang[key]; if (v == null) return;
-    const t = TG[key]; const st = gst(v, t); const col = C[st];
-    const a1 = Math.atan2(pts[a].y - pts[j].y, pts[a].x - pts[j].x);
-    const a2 = Math.atan2(pts[b].y - pts[j].y, pts[b].x - pts[j].x);
+  // 角度弧線 + 標籤
+  const ang=S.result.angles;
+  [['knee','hip','ankle','knee_extension'],['hip','shoulder','knee','hip_angle'],['shoulder','elbow','hip','shoulder_wrist'],['ankle','knee','foot','ankle_max']].forEach(([j,a,b,key])=>{
+    if(!pts[j]||!pts[a]||!pts[b])return;
+    const v=ang[key];if(v==null)return;
+    const t=TG[key],s=gst(v,t),col=COL[s];
+    const a1=Math.atan2(pts[a].y-pts[j].y,pts[a].x-pts[j].x);
+    const a2=Math.atan2(pts[b].y-pts[j].y,pts[b].x-pts[j].x);
+    const arcR=Math.max(22,W/28);
+    ctx.save();ctx.beginPath();ctx.arc(pts[j].x,pts[j].y,arcR,a1,a2,false);ctx.strokeStyle=col;ctx.lineWidth=Math.max(2,lw*.8);ctx.setLineDash([3,2]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    const ma=(a1+a2)/2,ld=arcR+Math.max(18,W/32);
+    const lx=pts[j].x+Math.cos(ma)*ld,ly=pts[j].y+Math.sin(ma)*ld,lbl=v+'°';
+    ctx.save();ctx.font=`bold ${Math.max(12,W/42)}px monospace`;
+    const tw=ctx.measureText(lbl).width,pad=5,bh=Math.max(12,W/42)+8;
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh,4);else ctx.rect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh);
+    ctx.fill();ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,lx,ly);ctx.restore();
+  });
+
+  // 彩色關節點（用 JOINTS 定義的顏色）
+  JOINTS.forEach((jd,i)=>{
+    const p=pts[jd.key];if(!p)return;
+    const r=Math.max(7,W/95);
     ctx.save();
-    ctx.beginPath(); ctx.arc(pts[j].x, pts[j].y, arcR, a1, a2, false);
-    ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, lw * .85);
-    ctx.setLineDash([3, 2]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.restore();
-    const ma = (a1 + a2) / 2;
-    const ld = arcR + Math.max(18, W / 32);
-    const lx = pts[j].x + Math.cos(ma) * ld;
-    const ly = pts[j].y + Math.sin(ma) * ld;
-    const lbl = v + '°';
-    ctx.save();
-    ctx.font = `bold ${fs}px 'DM Mono', monospace`;
-    const tw = ctx.measureText(lbl).width;
-    const pad = 6, bh = fs + 10;
-    ctx.fillStyle = 'rgba(0,0,0,.82)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(lx - tw/2 - pad, ly - bh/2, tw + pad*2, bh, 5);
-    else ctx.rect(lx - tw/2 - pad, ly - bh/2, tw + pad*2, bh);
-    ctx.fill();
-    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(lbl, lx, ly);
+    ctx.beginPath();ctx.arc(p.x,p.y,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(9,W/70)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(i+1,p.x,p.y);
     ctx.restore();
   });
-
-  // Red dots (top layer)
-  for (const [, p] of Object.entries(pts)) {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,59,59,.2)'; ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath(); ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
-    ctx.fillStyle = '#FF3B3B'; ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.restore();
-  }
 }
 
-// ── SIM CANVAS ───────────────────────────────────────
-function drawSim() {
-  const c = document.getElementById('sim-photo');
-  if (!c || !S.bdcImg || !S.result?.skeleton) return;
-  const ctx = c.getContext('2d');
-  const IMG = S.bdcImg;
-  const cw = c.parentElement?.clientWidth || 500;
-  const scale = cw / IMG.width;
-  c.width  = Math.round(IMG.width  * scale);
-  c.height = Math.round(IMG.height * scale);
-  const W = c.width, H = c.height;
-
-  ctx.drawImage(IMG, 0, 0, W, H);
-  ctx.fillStyle = 'rgba(0,0,0,.25)';
-  ctx.fillRect(0, 0, W, H);
-
-  const sk = S.result.skeleton;
-  const sim = S.sim;
-  const orig = {};
-  for (const [n, co] of Object.entries(sk)) {
-    if (co) orig[n] = { x: co.x * W, y: co.y * H };
-  }
-  const adj = {};
-  for (const n of Object.keys(orig)) adj[n] = { x: orig[n].x, y: orig[n].y };
-
-  const mm = 0.0018;
-  ['hip','knee','ankle','foot'].forEach(j => {
-    if (adj[j]) { adj[j].y += -sim.sh * mm * H; adj[j].x += sim.sb * mm * W * 0.5; }
-  });
-  ['shoulder','neck','elbow','wrist'].forEach(j => {
-    if (adj[j]) adj[j].y += -sim.st * mm * H * 0.8;
-  });
-  ['elbow','wrist'].forEach(j => {
-    if (adj[j]) adj[j].x += sim.sl * mm * W * 0.6;
-  });
-
-  const hasAdj = sim.sh !== 0 || sim.sb !== 0 || sim.st !== 0 || sim.sl !== 0;
-  const lw = Math.max(2, W / 240);
-
-  // 白色原始骨架
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,.5)';
-  ctx.lineWidth = lw; ctx.lineCap = 'round';
-  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
-   ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b]) => {
-    if (!orig[a]||!orig[b]) return;
-    ctx.beginPath(); ctx.moveTo(orig[a].x,orig[a].y); ctx.lineTo(orig[b].x,orig[b].y); ctx.stroke();
-  });
-  ctx.restore();
-
-  if (hasAdj) {
-    // 橙色調整後骨架（虛線）
-    ctx.save();
-    ctx.strokeStyle = 'rgba(244,123,0,.85)';
-    ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.setLineDash([6,4]);
-    [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
-     ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b]) => {
-      if (!adj[a]||!adj[b]) return;
-      ctx.beginPath(); ctx.moveTo(adj[a].x,adj[a].y); ctx.lineTo(adj[b].x,adj[b].y); ctx.stroke();
-    });
-    ctx.setLineDash([]); ctx.restore();
-
-    // 調整箭頭
-    for (const j of ['hip','knee','ankle','shoulder','elbow','wrist']) {
-      if (!orig[j]||!adj[j]) continue;
-      const dx = adj[j].x - orig[j].x, dy = adj[j].y - orig[j].y;
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      if (dist < 4) continue;
-      const angle = Math.atan2(dy, dx);
-      const len = Math.min(dist, Math.max(20, W/22));
-      const ex = orig[j].x + Math.cos(angle)*len;
-      const ey = orig[j].y + Math.sin(angle)*len;
-      const hl = Math.max(10, W/55);
-      ctx.save();
-      ctx.strokeStyle = '#F47B00'; ctx.fillStyle = '#F47B00';
-      ctx.lineWidth = Math.max(2.5, W/180); ctx.lineCap = 'round';
-      ctx.shadowColor = 'rgba(244,123,0,.7)'; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.moveTo(orig[j].x,orig[j].y); ctx.lineTo(ex,ey); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(ex,ey);
-      ctx.lineTo(ex-hl*Math.cos(angle-.4), ey-hl*Math.sin(angle-.4));
-      ctx.lineTo(ex-hl*Math.cos(angle+.4), ey-hl*Math.sin(angle+.4));
-      ctx.closePath(); ctx.fill(); ctx.restore();
-    }
-  }
-
-  // 白色關節點
-  const dotR = Math.max(5, W/100);
-  for (const [,p] of Object.entries(orig)) {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.restore();
-  }
-
-  if (!hasAdj) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,.6)';
-    ctx.font = `${Math.max(13,W/36)}px -apple-system,sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('← 拖動左側滑桿查看調整效果', W/2, H - 14);
-    ctx.restore();
-  }
+// ══ EXPORT ═══════════════════════════════════════════════
+function exportReport(){
+  if(!S.result)return;
+  const r=S.result,a=r.angles;
+  const lines=['Orange Fruit — Free Your Fit','AI BikeFit 分析報告','═══════════════════════════════',
+    `生成：${new Date().toLocaleString('zh-TW')}`,
+    `整體：${r.overall==='good'?'姿勢良好':r.overall==='needs_adjustment'?'需要調整':'需要改善'} · 信心度 ${r.confidence||'—'}%`,
+    '','【角度量測】',
+    ...Object.entries(a).map(([k,v])=>{const t=TG[k];if(!t||v==null)return null;return`${t.lbl}：${v}° (${t.min}-${t.max}°) ${LL[gst(v,t)]}`;}).filter(Boolean),
+    '','【AI 摘要】',r.summary_zh||'',
+    '','【建議清單】',...(r.bottom_up_issues||[]).map((s,i)=>`${i+1}. ${s}`)];
+  const bl=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const el=document.createElement('a');el.href=URL.createObjectURL(bl);el.download=`OrangeFruit_Fit_${Date.now()}.txt`;el.click();
 }
 
-// ── EXPORT ───────────────────────────────────────────
-function exportReport() {
-  if (!S.result) return;
-  const r = S.result, a = r.angles;
-  const lines = [
-    'Orange Fruit — Free Your Fit',
-    'AI BikeFit 分析報告',
-    '══════════════════════════════════',
-    `生成時間：${new Date().toLocaleString('zh-TW')}`,
-    `整體評估：${r.overall === 'good' ? '姿勢良好' : r.overall === 'needs_adjustment' ? '需要調整' : '需要改善'} · 信心度 ${r.confidence || '—'}%`,
-    '',
-    '【Bottom-Up 角度量測】',
-    '──────────────────────────────────',
-    ...Object.entries(a).map(([k, v]) => {
-      const t = TG[k]; if (!t || v == null) return null;
-      const st = gst(v, t);
-      return `${t.lbl.padEnd(10)}：${String(v + '°').padStart(5)}  (目標 ${t.min}-${t.max}°)  ${LL[st]}`;
-    }).filter(Boolean),
-    '',
-    '【AI 分析摘要】',
-    '──────────────────────────────────',
-    r.summary_zh || '—',
-    '',
-    '【Bottom-Up 問題清單】',
-    '──────────────────────────────────',
-    ...(r.bottom_up_issues || []).map((s, i) => `${i + 1}. ${s}`),
-    '',
-    '══════════════════════════════════',
-    'Orange Fruit · Free Your Fit',
-    'Powered by Google Gemini AI · Bottom-Up Protocol',
-  ];
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-  const el   = document.createElement('a');
-  el.href    = URL.createObjectURL(blob);
-  el.download = `OrangeFruit_BikeFit_${Date.now()}.txt`;
-  el.click();
+// ══ RESET ════════════════════════════════════════════════
+function resetAll(){
+  S.bdcImg=null;S.tdcImg=null;
+  set({step:1,error:'',bdcURL:null,tdcURL:null,joints:null,result:null,tab:'angles',logs:[],pct:0});
 }
 
-// ── RESET ────────────────────────────────────────────
-function resetAll() {
-  S.bdcImg = null; S.tdcImg = null;
-  set({
-    step:1, error:'',
-    bdcURL: null, tdcURL: null,
-    joints: null,
-    result: null, tab: 'angles',
-    logs: [], pct: 0,
-    sim: { sh:0, sb:0, st:0, sl:0 },
-  });
-}
-
-// ── UTILS ────────────────────────────────────────────
-function esc(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-
-// ── INIT ─────────────────────────────────────────────
+// ══ INIT ═════════════════════════════════════════════════
 render();
 </script>
 </body>
