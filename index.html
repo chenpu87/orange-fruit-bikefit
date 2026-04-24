@@ -1409,17 +1409,7 @@ async function startAnalysis() {
 }
 
 function buildPrompt(has2) {
-  return `你是專業 Bikefit 分析師，遵循 Bikefit.com Bottom-Up 原則（腳踝→膝蓋→髖部→上半身）。
-
-${has2
-  ? '請結合圖一（BDC 6點鐘下死點）與圖二（TDC 1點鐘近上死點）進行完整分析。'
-  : '請分析此側面騎乘照片，估算所有可見角度。'}
-
-skeleton 座標說明：以 BDC 圖為基準，x/y 均為 0-1 比例（左上角=0,0，右下角=1,1）。請精確標記各關節在照片中的實際位置。
-
-只回傳以下 JSON，不要任何說明文字或 markdown 符號：
-
-{"angles":{"knee_extension":<BDC膝伸展°整數或null>,"knee_flexion":<TDC膝屈曲°>,"hip_angle":<髖角°>,"ankle_max":<腳踝背屈°>,"shoulder_wrist":<肩腕角°>,"back_angle":<背部角°>},"skeleton":{"hip":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"neck":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good"或"needs_adjustment"或"poor","confidence":<0-100整數>,"bottom_up_issues":["<繁中問題1>","<繁中問題2>"],"summary_zh":"<3-4句繁中摘要，說明主要發現與調整建議>"}`;
+  return `你是Bikefit分析師。${has2?'圖一BDC(6點鐘下死點)，圖二TDC(1點鐘上死點)。':'分析此騎乘照片。'}只回傳JSON，禁止任何說明或markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":{"hip":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"neck":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中摘要>"}`;
 }
 
 // ── SKELETON CANVAS ──────────────────────────────────
