@@ -1,86 +1,87 @@
 // ============================================================
-// Orange Fruit BikeFit — Vercel Serverless API Proxy
-// 使用 Google Gemini API（免費方案）
+// Orange Fruit BikeFit — Vercel Serverless API Proxy (Gemini Edition)
 // ============================================================
 
-module.exports = async function handler(req, res) {
-
-  // CORS
+export default async function handler(req, res) {
+  // ── CORS 設定 ──────────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: { message: 'Method Not Allowed' } });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method Not Allowed' } });
 
-  // 取得 API Key（伺服器端優先，沒有就用前端傳來的）
-  const apiKey = process.env.GEMINI_API_KEY || (req.body && req.body.apiKey);
-
+  // ── 確認 Gemini API Key ────────────────────────────────
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(400).json({
-      error: { message: '請輸入 Gemini API Key' }
+    return res.status(500).json({
+      error: { message: '伺服器設定錯誤：GEMINI_API_KEY 未設定' }
     });
   }
 
-  const { apiKey: _removed, messages, model, max_tokens } = req.body;
-
   try {
-    // 把 Anthropic 格式的 messages 轉換成 Gemini 格式
-    const parts = [];
-    if (messages && messages[0] && messages[0].content) {
-      for (const block of messages[0].content) {
-        if (block.type === 'image') {
-          parts.push({
-            inline_data: {
-              mime_type: block.source.media_type,
-              data: block.source.data,
-            }
-          });
-        } else if (block.type === 'text') {
-          parts.push({ text: block.text });
+    const { messages } = req.body;
+    const userMessage = messages[0].content;
+
+    // 1. 提取文字指令
+    const textPart = userMessage.find(c => c.type === 'text')?.text || "";
+
+    // 2. 提取圖片並轉為 Gemini 格式 (Base64)
+    const imageParts = userMessage
+      .filter(c => c.type === 'image')
+      .map(img => ({
+        inline_data: {
+          mime_type: "image/jpeg",
+          data: img.source.data // 前端傳來的 Base64 字串
         }
-      }
-    }
+      }));
 
-    const geminiBody = {
-      contents: [{ parts }],
-      generationConfig: {
-        maxOutputTokens: max_tokens || 1200,
-        temperature: 0.1,
-      }
-    };
+    // ── 呼叫 Google Gemini API ─────────────────────────────
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    const geminiModel = 'gemini-2.0-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiBody),
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: textPart },
+              ...imageParts
+            ]
+          }
+        ],
+        generationConfig: {
+          response_mime_type: "application/json", // 強制要求 JSON 回傳
+          temperature: 0.2
+        }
+      }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({
-        error: { message: data.error?.message || '分析失敗，請重試' }
-      });
+      throw new Error(data.error?.message || 'Gemini API 請求失敗');
     }
 
-    // 把 Gemini 回應格式轉換成前端期望的 Anthropic 格式
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const anthropicFormat = {
-      content: [{ type: 'text', text }]
-    };
+    // 提取 Gemini 的回傳文字
+    const resultText = data.candidates[0].content.parts[0].text;
 
-    return res.status(200).json(anthropicFormat);
+    // ── 格式適配器 (Adapter) ──────────────────────────────
+    // 為了讓 index.html 不必改動，我們把結果封裝成原本前端預期的 Claude 格式
+    return res.status(200).json({
+      content: [
+        {
+          type: 'text',
+          text: resultText
+        }
+      ]
+    });
 
   } catch (err) {
-    console.error('Gemini API 錯誤：', err);
+    console.error('Analyze Error:', err);
     return res.status(500).json({
-      error: { message: '無法連線至 AI 伺服器：' + err.message }
+      error: { message: err.message || '分析過程中發生未知錯誤' }
     });
   }
-};
+}
