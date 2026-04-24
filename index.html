@@ -848,6 +848,7 @@ input[type=file] { display: none; }
   <div id="view-1"></div>
   <div id="view-2" style="display:none"></div>
   <div id="view-3" style="display:none"></div>
+  <div id="view-4" style="display:none"></div>
 
 </div>
 
@@ -891,6 +892,7 @@ const S = {
   step: 1,
   bdcURL: null, bdcImg: null,
   tdcURL: null, tdcImg: null,
+  joints: null,   // 使用者手動標示的關節座標 {neck,shoulder,hip,elbow,wrist,knee,ankle,foot}
   result: null,
   error: '',
   tab: 'angles',
@@ -917,16 +919,19 @@ function render() {
   document.getElementById('view-1').style.display = S.step === 1 ? '' : 'none';
   document.getElementById('view-2').style.display = S.step === 2 ? '' : 'none';
   document.getElementById('view-3').style.display = S.step === 3 ? '' : 'none';
+  document.getElementById('view-4').style.display = S.step === 4 ? '' : 'none';
   if (S.step === 1) renderUpload();
-  if (S.step === 2) renderProgress();
-  if (S.step === 3) renderReport();
+  if (S.step === 2) renderJoints();
+  if (S.step === 3) renderProgress();
+  if (S.step === 4) renderReport();
 }
 
 function renderStepBar() {
   const steps = [
     { n:1, l:'上傳照片' },
-    { n:2, l:'人工智慧分析' },
-    { n:3, l:'查看報告' },
+    { n:2, l:'標示關節' },
+    { n:3, l:'AI 分析' },
+    { n:4, l:'查看報告' },
   ];
   document.getElementById('step-bar').innerHTML = steps.map((s, i) => {
     const cs = S.step > s.n ? 'done' : S.step === s.n ? 'active' : 'idle';
@@ -1015,7 +1020,7 @@ function bindUploadEvents() {
   // Analyze button
   const btn = document.getElementById('analyze-btn');
   if (btn && !btn.classList.contains('disabled')) {
-    btn.onclick = startAnalysis;
+    btn.onclick = goToJointMarking;
     btn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') startAnalysis(); };
   }
 
@@ -1094,8 +1099,184 @@ function renderProgress() {
   </div>`;
 
   document.getElementById('btn-back')?.addEventListener('click', () =>
-    set({ step:1, error:'', logs:[], pct:0 })
+    set({ step: S.joints ? 2 : 1, error:'', logs:[], pct:0 })
   );
+}
+
+// ── JOINT MARKING FUNCTIONS ──────────────────────────────────
+function goToJointMarking() {
+  if (!S.bdcURL && !S.tdcURL) { set({ error: '請先上傳至少一張照片' }); return; }
+  set({ step: 2, error: '', joints: null });
+}
+
+const JOINT_ORDER = [
+  { key: 'neck',     label: '頸肩交接',   color: '#FFD700', desc: '頸部與肩膀交接處' },
+  { key: 'shoulder', label: '肩峰',       color: '#FF6B6B', desc: '肩膀最高骨性突起' },
+  { key: 'hip',      label: '髖關節',     color: '#FF6B6B', desc: '側面褲腰最突出的骨頭' },
+  { key: 'elbow',    label: '手肘',       color: '#4ECDC4', desc: '手臂彎折中心點' },
+  { key: 'wrist',    label: '手腕',       color: '#4ECDC4', desc: '握把附近手腕彎折處' },
+  { key: 'knee',     label: '膝關節',     color: '#FF6B6B', desc: '大腿與小腿交接中心' },
+  { key: 'ankle',    label: '踝關節',     color: '#FF6B6B', desc: '腳踝骨頭中心' },
+  { key: 'foot',     label: '腳掌前端',   color: '#FFD700', desc: '腳趾/腳掌最前端' },
+];
+
+function renderJoints() {
+  const el = document.getElementById('view-2');
+  const joints = S.joints || {};
+  const doneCount = Object.keys(joints).length;
+  const currentIdx = doneCount < JOINT_ORDER.length ? doneCount : JOINT_ORDER.length - 1;
+  const allDone = doneCount >= JOINT_ORDER.length;
+  const current = JOINT_ORDER[currentIdx];
+
+  el.innerHTML = `
+  <div class="card fade-up">
+    <div class="card-head">
+      <div class="card-title">🎯 標示關節點</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${doneCount}/${JOINT_ORDER.length} 完成</span>
+        <button class="btn btn-ghost btn-sm" id="btn-back-joints">← 返回</button>
+      </div>
+    </div>
+    <div style="padding:14px 20px;background:var(--sur2);border-bottom:1px solid var(--bd)">
+      ${allDone
+        ? `<div style="display:flex;align-items:center;gap:10px;color:var(--ok);font-weight:600;font-size:14px">✓ 所有關節點已標示完成！</div>`
+        : `<div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:${current.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${currentIdx+1}</div>
+            <div>
+              <div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${current.label}</span></div>
+              <div style="font-size:12px;color:var(--tx3);margin-top:2px">${current.desc}</div>
+            </div>
+           </div>`
+      }
+    </div>
+    <div style="position:relative;background:#000;cursor:${allDone?'default':'crosshair'}" id="joint-canvas-wrap">
+      <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:520px;object-fit:contain">
+      <canvas id="joint-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="btn-undo-joint" ${doneCount===0?'disabled':''}>↩ 撤銷上一點</button>
+      <button class="btn btn-ghost btn-sm" id="btn-reset-joints" ${doneCount===0?'disabled':''}>✕ 全部重置</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-dark" id="btn-analyze-joints" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 24px">
+        開始 AI 分析 →
+      </button>
+    </div>
+    <div style="padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:6px;flex-wrap:wrap">
+      ${JOINT_ORDER.map((j,i) => {
+        const done = joints[j.key];
+        return `<div style="display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;background:${done?j.color+'22':'var(--sur2)'};border:1px solid ${done?j.color:'var(--bd)'}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${done?j.color:'var(--bd2)'}"></div>
+          <span style="color:${done?'var(--tx)':'var(--tx3)'}">${j.label}</span>
+          ${done?'<span style="color:'+j.color+'">✓</span>':''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // 事件綁定
+  document.getElementById('btn-back-joints')?.addEventListener('click', () =>
+    set({ step:1, error:'', joints:null })
+  );
+  document.getElementById('btn-undo-joint')?.addEventListener('click', () => {
+    const keys = Object.keys(S.joints||{});
+    if (keys.length === 0) return;
+    const newJoints = {...S.joints};
+    delete newJoints[keys[keys.length-1]];
+    set({ joints: newJoints });
+  });
+  document.getElementById('btn-reset-joints')?.addEventListener('click', () =>
+    set({ joints: {} })
+  );
+  document.getElementById('btn-analyze-joints')?.addEventListener('click', () => {
+    if (allDone) startAnalysis();
+  });
+
+  // Canvas 繪製與點擊
+  const img = document.getElementById('joint-img');
+  const canvas = document.getElementById('joint-canvas');
+  const wrap = document.getElementById('joint-canvas-wrap');
+  if (!canvas || !img) return;
+
+  function resizeCanvas() {
+    const rect = img.getBoundingClientRect();
+    const wrect = wrap.getBoundingClientRect();
+    canvas.width  = rect.width;
+    canvas.height = rect.height;
+    canvas.style.left = (rect.left - wrect.left) + 'px';
+    canvas.style.top  = (rect.top  - wrect.top)  + 'px';
+    drawJoints();
+  }
+
+  function drawJoints() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const j = S.joints || {};
+
+    // 畫已標示的連線
+    const conns = [['neck','shoulder'],['shoulder','hip'],['shoulder','elbow'],['elbow','wrist'],['hip','knee'],['knee','ankle'],['ankle','foot']];
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(2, W/300);
+    ctx.lineCap = 'round';
+    for (const [a,b] of conns) {
+      if (!j[a]||!j[b]) continue;
+      ctx.beginPath();
+      ctx.moveTo(j[a].x*W, j[a].y*H);
+      ctx.lineTo(j[b].x*W, j[b].y*H);
+      ctx.stroke();
+    }
+
+    // 畫關節點
+    for (let i=0; i<JOINT_ORDER.length; i++) {
+      const jd = JOINT_ORDER[i];
+      if (!j[jd.key]) continue;
+      const px = j[jd.key].x * W, py = j[jd.key].y * H;
+      const r = Math.max(7, W/70);
+      ctx.save();
+      ctx.beginPath(); ctx.arc(px,py,r+3,0,Math.PI*2);
+      ctx.fillStyle = jd.color+'33'; ctx.fill();
+      ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
+      ctx.fillStyle = jd.color; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font=\`bold \${Math.max(10,W/60)}px monospace\`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(i+1, px, py);
+      ctx.restore();
+    }
+
+    // 高亮下一個要點的位置提示圈（脈動效果不可行，用靜態圈）
+    if (!allDone && current) {
+      const t = Date.now()/1000;
+      const pulse = 0.7 + 0.3*Math.sin(t*4);
+      ctx.save();
+      ctx.strokeStyle = current.color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5,5]);
+      ctx.globalAlpha = pulse;
+      ctx.beginPath(); ctx.arc(W*0.5, H*0.5, 30, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  }
+
+  // 點擊事件
+  if (!allDone) {
+    canvas.addEventListener('click', function handler(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / canvas.width;
+      const y = (e.clientY - rect.top)  / canvas.height;
+      const currentJ = JOINT_ORDER[Object.keys(S.joints||{}).length];
+      if (!currentJ) return;
+      const newJoints = {...(S.joints||{}), [currentJ.key]: {x, y}};
+      set({ joints: newJoints });
+    });
+  }
+
+  img.onload = resizeCanvas;
+  if (img.complete) setTimeout(resizeCanvas, 50);
+  window.addEventListener('resize', resizeCanvas);
 }
 
 // ── VIEW 3: REPORT ───────────────────────────────────
@@ -1363,7 +1544,7 @@ async function startAnalysis() {
       content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data: S.tdcURL.split(',')[1] } });
       content.push({ type:'text', text: '圖二 TDC（曲柄 1 點鐘近上死點）：' });
     }
-    content.push({ type:'text', text: buildPrompt(has2) });
+    content.push({ type:'text', text: buildPrompt(has2, S.joints) });
 
     addLog('⟳ 傳送至 AI 分析伺服器…', 'info'); setPct(32);
 
@@ -1419,7 +1600,7 @@ async function startAnalysis() {
     setPct(95); addLog('⟳ 生成報告…', 'info');
     setPct(100); addLog('✓ 分析完成！', 'ok');
 
-    setTimeout(() => set({ result: parsed, step: 3, error: '', tab: 'angles' }), 800);
+    setTimeout(() => set({ result: parsed, step: 4, error: '', tab: 'angles' }), 800);
 
   } catch (err) {
     addLog('✕ 錯誤：' + err.message, 'err');
@@ -1427,13 +1608,18 @@ async function startAnalysis() {
   }
 }
 
-function buildPrompt(has2) {
+function buildPrompt(has2, joints) {
+  // 如果有手動標示的關節點，直接用，不讓 AI 猜
+  const skStr = joints
+    ? JSON.stringify(joints)
+    : '{"neck":{"x":0,"y":0},...}';
+
   return `你是Bikefit分析師。${has2?'圖一BDC(6點鐘下死點)，圖二TDC(1點鐘上死點)。':'分析此騎乘側面照片。'}
 
-座標說明：以BDC圖為準，x=左到右0-1，y=上到下0-1。
-neck=頸肩交接，shoulder=肩峰，hip=大轉子，elbow=肘，wrist=手腕，knee=膝，ankle=踝，foot=腳掌前端。
+關節座標已由使用者精確標示（直接使用這些座標，不要修改）：
+${skStr}
 
-只回傳JSON，禁止markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":{"neck":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"hip":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中>"}`;
+根據以上照片和座標，計算各角度。只回傳JSON，禁止markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":${skStr},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中>"}`;
 }
 
 // ── SKELETON CANVAS ──────────────────────────────────
@@ -1450,8 +1636,16 @@ function drawSkeleton() {
 
   ctx.drawImage(IMG, 0, 0, W, H);
 
-  const sk = S.result.skeleton;
-  if (!sk) return;
+  // 優先用使用者手動標示的關節點
+  const skUser = S.joints || {};
+  const skAI   = S.result?.skeleton || {};
+  const skFb   = estimateSkeleton(S.result?.angles || {}, W, H);
+  const sk = {};
+  for (const key of ['neck','shoulder','hip','elbow','wrist','knee','ankle','foot']) {
+    if (skUser[key]?.x != null)     sk[key] = skUser[key];
+    else if (skAI[key]?.x != null)  sk[key] = skAI[key];
+    else                            sk[key] = skFb[key];
+  }
 
   // 座標換算
   const pts = {};
@@ -1680,6 +1874,7 @@ function resetAll() {
   set({
     step:1, error:'',
     bdcURL: null, tdcURL: null,
+    joints: null,
     result: null, tab: 'angles',
     logs: [], pct: 0,
     sim: { sh:0, sb:0, st:0, sl:0 },
