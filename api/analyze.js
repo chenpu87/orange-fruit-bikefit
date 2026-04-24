@@ -35,37 +35,53 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // gemini-2.5-flash 搭配 v1beta 端點
-    const model = 'gemini-2.5-flash-preview-04-17';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // 先嘗試 gemini-2.5-flash，失敗則 fallback 到 gemini-2.0-flash
+    const modelsToTry = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+    ];
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          maxOutputTokens: 1200,
-          temperature: 0.1,
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+              maxOutputTokens: 1200,
+              temperature: 0.1,
+            }
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+          const text = data.candidates[0].content.parts[0].text;
+          console.log(`成功使用 model: ${model}`);
+          return res.status(200).json({
+            content: [{ type: 'text', text }]
+          });
         }
-      }),
-    });
 
-    const data = await response.json();
+        lastError = data.error?.message || `Model ${model} 無回應`;
+        console.log(`${model} 失敗：${lastError}，嘗試下一個...`);
 
-    if (!response.ok) {
-      console.error('Gemini Error:', JSON.stringify(data));
-      throw new Error(data.error?.message || `Gemini API 錯誤 HTTP ${response.status}`);
+      } catch (e) {
+        lastError = e.message;
+        console.log(`${model} 例外：${e.message}`);
+      }
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    return res.status(200).json({
-      content: [{ type: 'text', text }]
-    });
+    throw new Error('所有 model 都失敗：' + lastError);
 
   } catch (err) {
-    console.error('Handler error:', err);
+    console.error('Handler error:', err.message);
     return res.status(500).json({ error: { message: err.message } });
   }
 };
