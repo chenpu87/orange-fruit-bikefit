@@ -21,30 +21,26 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 【核心修正】使用 v1beta 端點並確保模型 ID 正確
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 【強制修正】使用 flash-latest 標籤，並確保 API 端點為 v1beta
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
-        generationConfig: { 
-          temperature: 0.1 // 降低隨機性以獲取穩定的 JSON
-        }
+        generationConfig: { temperature: 0.1 }
       }),
     });
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error?.message || `API 調用失敗 (HTTP ${response.status})`);
+      // 若還是報錯，將完整的錯誤訊息回傳給前端以便診斷
+      throw new Error(data.error?.message || `模型暫不可用 (HTTP ${response.status})`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
-
-    return res.status(200).json({
-      content: [{ type: 'text', text: resultText }]
-    });
+    return res.status(200).json({ content: [{ type: 'text', text: resultText }] });
 
   } catch (err) {
     return res.status(500).json({ error: { message: err.message } });
