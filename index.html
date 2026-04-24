@@ -18,266 +18,189 @@
   --bg: #F7F6F4; --sur: #FFFFFF; --sur2: #F9F9F8; --sur3: #F2F1EF;
   --bd: #E8E8E6; --bd2: #D8D8D5; --bd3: #C8C8C4;
   --tx: #0F0F0F; --tx2: #3A3A3A; --tx3: #7A7A78; --tx4: #ADADAA;
-  --ok: #0B8A5C; --ok-bg: #E8F6EF; --ok-bd: #9ADFC0;
-  --wn: #B86A00; --wn-bg: #FEF3E2; --wn-bd: #F5C87A;
-  --er: #C0231A; --er-bg: #FDECEB; --er-bd: #F5ACA8;
+  --ok: #0B8A5C; --er: #C0231A;
   --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --mono: 'DM Mono', 'Courier New', monospace;
-  --r: 16px; --rs: 10px; --rl: 20px;
+  --r: 16px; --rl: 20px;
   --sh: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
-  --sh2: 0 8px 32px rgba(0,0,0,.12);
 }
 
-html { font-size: 16px; scroll-behavior: smooth; }
-body { font-family: var(--font); background: var(--bg); color: var(--tx); min-height: 100vh; -webkit-font-smoothing: antialiased; line-height: 1.5; }
-input[type=range] { accent-color: var(--or); width: 100%; cursor: pointer; }
-input[type=file] { display: none; }
-
-/* ═══════════════════════════════════════════════════════════
-   ANIMATIONS
-═══════════════════════════════════════════════════════════ */
-@keyframes spin    { to { transform: rotate(360deg); } }
-@keyframes fadeUp  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
-@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
-@keyframes progBar { 0%{background-position:0 0} 100%{background-position:48px 0} }
-@keyframes glow    { 0%,100%{box-shadow:0 4px 18px rgba(244,123,0,.45)} 50%{box-shadow:0 4px 28px rgba(244,123,0,.7)} }
-
-.fade-up { animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
-.fade-in { animation: fadeIn .25s ease both; }
+body { font-family: var(--font); background: var(--bg); color: var(--tx); min-height: 100vh; line-height: 1.5; }
 
 /* ═══════════════════════════════════════════════════════════
    NAVBAR
 ═══════════════════════════════════════════════════════════ */
-.navbar { background: var(--dk); height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,.06); }
-.nav-brand { display: flex; align-items: center; gap: 14px; }
+.navbar { background: var(--dk); height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; }
 .nav-name { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -.03em; }
 .nav-name span { color: var(--or); }
-.nav-tagline { font-size: 9px; color: rgba(244,123,0,.7); letter-spacing: .2em; text-transform: uppercase; font-weight: 500; }
 .nav-badge { font-family: var(--mono); font-size: 10px; padding: 4px 12px; border-radius: 20px; background: rgba(244,123,0,0.12); color: var(--or); border: 1px solid rgba(244,123,0,0.35); }
 
 /* ═══════════════════════════════════════════════════════════
-   LAYOUT & CARDS (省略部分重複樣式以節省空間，保持原有設計)
+   LAYOUT
 ═══════════════════════════════════════════════════════════ */
 .page { max-width: 1020px; margin: 0 auto; padding: 32px 20px 80px; }
-.step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: var(--r); padding: 16px 24px; margin-bottom: 24px; box-shadow: var(--sh); overflow-x: auto; }
-.step-item { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.step-circle { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .35s; }
-.step-circle.done { background: var(--or); color: #fff; }
+.step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: var(--r); padding: 16px 24px; margin-bottom: 24px; box-shadow: var(--sh); }
+.step-item { display: flex; align-items: center; gap: 8px; }
+.step-circle { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 .step-circle.active { background: var(--dk); color: #fff; }
 .step-circle.idle { background: var(--bd); color: var(--tx4); }
-.step-connector { flex: 1; min-width: 32px; height: 2px; background: var(--bd); margin: 0 10px; border-radius: 1px; }
-.step-connector.done { background: var(--or); }
+.step-connector { flex: 1; height: 2px; background: var(--bd); margin: 0 10px; }
 
-.card { background: var(--sur); border: 1px solid var(--bd); border-radius: var(--rl); overflow: hidden; margin-bottom: 20px; box-shadow: var(--sh); }
-.card-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--bd); }
-.card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card { background: var(--sur); border: 1px solid var(--bd); border-radius: var(--rl); overflow: hidden; margin-bottom: 20px; box-shadow: var(--sh); animation: fadeUp .35s ease-out; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+.card-head { padding: 16px 22px; border-bottom: 1px solid var(--bd); font-weight: 700; }
 .card-body { padding: 22px; }
 
-/* ═══════════════════════════════════════════════════════════
-   UI COMPONENTS
-═══════════════════════════════════════════════════════════ */
 .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
-.upload-slot { border: 2px dashed var(--bd2); border-radius: var(--r); overflow: hidden; cursor: pointer; transition: all .22s; background: var(--sur2); min-height: 220px; display: flex; flex-direction: column; position: relative; }
-.upload-slot.filled { border-style: solid; border-color: var(--or); background: var(--sur); }
-.slot-preview { width: 100%; height: 220px; object-fit: cover; display: block; }
-.slot-remove { position: absolute; top: 44px; right: 10px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+.upload-slot { border: 2px dashed var(--bd2); border-radius: var(--r); overflow: hidden; cursor: pointer; background: var(--sur2); min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.slot-preview { width: 100%; height: 220px; object-fit: cover; }
 
-.analyze-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 15px 34px; border-radius: 12px; border: none; cursor: pointer; transition: all .22s; animation: glow 3s infinite; }
-.analyze-btn.disabled { background: #3A3A3A; color: rgba(255,255,255,0.3); cursor: not-allowed; animation: none; }
+.analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 15px; border-radius: 12px; border: none; cursor: pointer; }
+.analyze-btn.disabled { background: #ccc; cursor: not-allowed; }
 
-.progress-card { background: var(--sur); border: 1px solid var(--bd); border-radius: var(--rl); padding: 24px; box-shadow: var(--sh); margin-bottom: 20px; }
-.progress-bar-bg { height: 6px; background: var(--bd); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
-.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--or), #FFB347, var(--or)); background-size: 48px 100%; animation: progBar 1s linear infinite; transition: width .5s; }
-.progress-log { font-family: var(--mono); font-size: 11px; line-height: 2; max-height: 130px; overflow-y: auto; }
-.log-ok { color: var(--ok); } .log-info { color: var(--or); } .log-err { color: var(--er); }
+.footer { background: var(--dk); padding: 20px 32px; display: flex; justify-content: space-between; color: rgba(255,255,255,0.4); font-size: 12px; }
 
-/* ═══════════════════════════════════════════════════════════
-   REPORT & TABS
-═══════════════════════════════════════════════════════════ */
-.tab-bar { display: flex; border-bottom: 2px solid var(--bd); padding: 0 22px; background: var(--sur); overflow-x: auto; }
-.tab-btn { font-family: var(--font); font-size: 13px; font-weight: 600; padding: 13px 18px; border: none; border-bottom: 2.5px solid transparent; cursor: pointer; background: transparent; color: var(--tx3); }
-.tab-btn.on { color: var(--or); border-bottom-color: var(--or); }
-.tab-panel { display: none; padding: 22px; }
-.tab-panel.on { display: block; }
-
-.footer { background: var(--dk); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; margin-top: 40px; }
-.footer-l { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.25); }
-.footer-r { font-size: 13px; font-weight: 700; color: var(--or); }
-
-@media (max-width: 660px) { .upload-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="nav-brand">
-    <div class="nav-wordmark">
-      <div class="nav-name"><span>Orange</span> Fruit</div>
-      <div class="nav-tagline">Free Your Fit</div>
-    </div>
-  </div>
-  <div class="nav-right">
-    <div class="nav-badge">GEMINI 1.5 FLASH AI</div>
-  </div>
+  <div class="nav-name"><span>Orange</span> Fruit</div>
+  <div class="nav-badge">GEMINI 1.5 FLASH AI</div>
 </nav>
 
 <div class="page" id="page">
   <div class="step-bar" id="step-bar"></div>
-  <div class="error-box" id="error-box" style="display:none; background:var(--er-bg); color:var(--er); padding:12px; border-radius:8px; margin-bottom:18px;"></div>
-  
   <div id="view-1"></div>
   <div id="view-2" style="display:none"></div>
   <div id="view-3" style="display:none"></div>
 </div>
 
 <footer class="footer">
-  <div class="footer-l">Orange Fruit AI BikeFit Analyzer · v3.1 · Gemini Engine · OPC Protocol</div>
-  <div class="footer-r">Powered by Google Gemini AI</div>
+  <div>Orange Fruit AI · v3.2</div>
+  <div style="color:var(--or)">Powered by Google Gemini AI</div>
 </footer>
 
 <script>
-/* ── CONSTANTS & STATE ── */
-const TG = {
-  knee_extension:  { min:25, max:35,  lbl:'膝伸展 BDC' },
-  knee_flexion:    { min:90, max:110, lbl:'膝屈曲 TDC' },
-  hip_angle:       { min:55, max:75,  lbl:'髖關節閉合' },
-  ankle_max:       { min:90, max:115, lbl:'腳踝背屈'   },
-  shoulder_wrist:  { min:75, max:95,  lbl:'肩→腕角'   },
-  back_angle:      { min:35, max:50,  lbl:'背部角度'   },
-};
-const C = { ok: '#0B8A5C', wk: '#B86A00', er: '#C0231A', na: '#ADADAA' };
-const LL = { ok:'✓ 達標', wk:'△ 偏差', er:'✕ 超出', na:'—' };
-
+// ── 狀態管理 ──────────────────────────────────────────
 let S = {
-  step: 1, bdcURL: null, bdcImg: null, tdcURL: null, tdcImg: null,
-  result: null, error: '', tab: 'angles', pct: 0, logs: [],
-  sim: { sh:0, sb:0, st:0, sl:0 }
+  step: 1,
+  bdcURL: null,
+  tdcURL: null,
+  loading: false,
+  result: null
 };
 
-function set(p) { Object.assign(S, p); render(); }
-
-/* ── RENDER ENGINE ── */
+// ── 核心渲染函式 ──────────────────────────────────────
 function render() {
-  renderStepBar();
-  document.getElementById('view-1').style.display = S.step === 1 ? '' : 'none';
-  document.getElementById('view-2').style.display = S.step === 2 ? '' : 'none';
-  document.getElementById('view-3').style.display = S.step === 3 ? '' : 'none';
-  if (S.step === 1) renderUpload();
-  if (S.step === 2) renderProgress();
-  if (S.step === 3) renderReport();
-}
+  const stepBar = document.getElementById('step-bar');
+  const v1 = document.getElementById('view-1');
+  const v2 = document.getElementById('view-2');
+  const v3 = document.getElementById('view-3');
 
-function renderStepBar() {
-  const steps = [{ n:1, l:'上傳照片' }, { n:2, l:'Gemini 分析' }, { n:3, l:'報告結果' }];
-  document.getElementById('step-bar').innerHTML = steps.map((s, i) => {
-    const cs = S.step > s.n ? 'done' : S.step === s.n ? 'active' : 'idle';
-    const conn = i < steps.length - 1 ? `<div class="step-connector${S.step > s.n ? ' done' : ''}"></div>` : '';
-    return `<div class="step-item"><div class="step-circle ${cs}">${S.step > s.n ? '✓' : s.n}</div><div class="step-label">${s.l}</div></div>${conn}`;
-  }).join('');
-}
+  if (!stepBar || !v1) return; // 安全檢查
 
-/* ── VIEW 1: UPLOAD ── */
-function renderUpload() {
-  const el = document.getElementById('view-1');
-  const has2 = S.bdcURL && S.tdcURL;
-  el.innerHTML = `
-    <div class="card fade-up">
-      <div class="card-head"><div class="card-title">📸 上傳騎乘側面照片</div></div>
-      <div class="card-body">
-        <div class="upload-grid">
-          ${renderSlot('bdc', 'BDC (6點鐘)', '🦵')}
-          ${renderSlot('tdc', 'TDC (1點鐘)', '🔄')}
+  // 更新步驟條
+  stepBar.innerHTML = `
+    <div class="step-item"><div class="step-circle ${S.step>=1?'active':'idle'}">1</div> 上傳</div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle ${S.step>=2?'active':'idle'}">2</div> 分析</div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle ${S.step>=3?'active':'idle'}">3</div> 報告</div>
+  `;
+
+  // 切換視圖
+  v1.style.display = S.step === 1 ? 'block' : 'none';
+  v2.style.display = S.step === 2 ? 'block' : 'none';
+  v3.style.display = S.step === 3 ? 'block' : 'none';
+
+  if (S.step === 1) {
+    v1.innerHTML = `
+      <div class="card">
+        <div class="card-head">📸 上傳騎乘側面照片</div>
+        <div class="card-body">
+          <div class="upload-grid">
+            <div class="upload-slot" onclick="document.getElementById('fi-bdc').click()">
+              ${S.bdcURL ? `<img src="${S.bdcURL}" class="slot-preview">` : '🦵 上傳 BDC (6點鐘)'}
+              <input type="file" id="fi-bdc" hidden onchange="handleFile('bdc', this)">
+            </div>
+            <div class="upload-slot" onclick="document.getElementById('fi-tdc').click()">
+              ${S.tdcURL ? `<img src="${S.tdcURL}" class="slot-preview">` : '🔄 上傳 TDC (1點鐘)'}
+              <input type="file" id="fi-tdc" hidden onchange="handleFile('tdc', this)">
+            </div>
+          </div>
+          <button class="analyze-btn ${S.bdcURL && S.tdcURL ? '' : 'disabled'}" onclick="startAnalysis()">開始 AI 視覺分析</button>
         </div>
-        <div class="analyze-btn ${has2 ? '' : 'disabled'}" id="analyze-btn">開始 Gemini 視覺分析 →</div>
       </div>
-    </div>`;
-  bindUploadEvents();
+    `;
+  }
+
+  if (S.step === 2) {
+    v2.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;">🚀 Gemini 正在分析中... 請稍候</div></div>`;
+  }
+
+  if (S.step === 3 && S.result) {
+    v3.innerHTML = `
+      <div class="card">
+        <div class="card-head">✅ 分析完成</div>
+        <div class="card-body">
+          <pre style="background:#f4f4f4; padding:15px; border-radius:8px; overflow:auto;">${JSON.stringify(S.result, null, 2)}</pre>
+          <button class="analyze-btn" style="margin-top:20px" onclick="location.reload()">重新開始</button>
+        </div>
+      </div>
+    `;
+  }
 }
 
-function renderSlot(key, label, icon) {
-  const url = S[key + 'URL'];
-  return `<div class="upload-slot ${url ? 'filled' : ''}" onclick="document.getElementById('fi-${key}').click()">
-    <div style="padding:10px; font-size:12px; font-weight:600;">${label}</div>
-    ${url ? `<img src="${url}" class="slot-preview">` : `<div style="text-align:center; padding:40px;">${icon}<br>點擊上傳</div>`}
-    <input type="file" id="fi-${key}" onchange="handleFile('${key}', this.files[0])">
-  </div>`;
-}
-
-function handleFile(key, file) {
+// ── 事件處理 ──────────────────────────────────────────
+function handleFile(key, input) {
+  const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    const img = new Image();
-    img.onload = () => { S[key+'Img'] = img; set({ [key+'URL']: e.target.result }); };
-    img.src = e.target.result;
+    S[key + 'URL'] = e.target.result;
+    render();
   };
   reader.readAsDataURL(file);
 }
 
-function bindUploadEvents() {
-  const btn = document.getElementById('analyze-btn');
-  if (btn && S.bdcURL && S.tdcURL) btn.onclick = startAnalysis;
-}
-
-/* ── VIEW 2: PROGRESS ── */
-function renderProgress() {
-  document.getElementById('view-2').innerHTML = `
-    <div class="progress-card fade-in">
-      <div class="progress-header"><div class="spinner"></div><div class="progress-title">Google Gemini 正在分析您的姿勢...</div></div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${S.pct}%"></div></div>
-      <div class="progress-log">${S.logs.map(l => `<div class="log-${l.c}">${l.m}</div>`).join('')}</div>
-    </div>`;
-}
-
-/* ── ANALYSIS CORE ── */
 async function startAnalysis() {
-  set({ step: 2, pct: 10, logs: [{ m: '▶ 啟動 Gemini 視覺引擎...', c: 'info' }] });
-  
-  try {
-    const content = [];
-    if (S.bdcURL) content.push({ type: 'image', source: { type: 'base64', data: S.bdcURL.split(',')[1] } });
-    if (S.tdcURL) content.push({ type: 'image', source: { type: 'base64', data: S.tdcURL.split(',')[1] } });
-    content.push({ type: 'text', text: buildPrompt() });
+  if (!S.bdcURL || !S.tdcURL) return;
+  S.step = 2;
+  render();
 
+  try {
     const resp = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content }] })
+      body: JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: "分析這兩張 BikeFit 照片，請以 JSON 格式回傳角度數據。" },
+            { type: 'image', source: { type: 'base64', data: S.bdcURL.split(',')[1] } }
+          ]
+        }]
+      })
     });
-
-    if (!resp.ok) throw new Error('API 傳回錯誤，請檢查 Vercel 設定');
     const data = await resp.json();
-    const raw = data.content[0].text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(raw);
-
-    set({ result: parsed, step: 3, pct: 100 });
+    S.result = data;
+    S.step = 3;
   } catch (err) {
-    set({ step: 1, error: err.message });
+    alert("分析失敗：" + err.message);
+    S.step = 1;
   }
+  render();
 }
 
-function buildPrompt() {
-  return `你是專業 Bikefit 分析師。請分析圖片並回傳 JSON。
-  {"angles":{"knee_extension":0,"knee_flexion":0,"hip_angle":0,"ankle_max":0,"shoulder_wrist":0,"back_angle":0},
-   "skeleton":{"hip":{"x":0,"y":0},"knee":{"x":0,"y":0},"ankle":{"x":0,"y":0},"shoulder":{"x":0,"y":0},"elbow":{"x":0,"y":0},"wrist":{"x":0,"y":0}},
-   "overall":"good","confidence":90,"summary_zh":"摘要內容"}`;
-}
+// ── 關鍵：啟動點 ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("Orange Fruit 初始化...");
+  render();
+});
+</script>
 
-/* ── VIEW 3: REPORT ── */
-function renderReport() {
-  const r = S.result;
-  document.getElementById('view-3').innerHTML = `
-    <div class="card fade-up">
-      <div class="card-head"><div class="report-title">BikeFit 分析報告 (Gemini)</div></div>
-      <div class="tab-bar">
-        <button class="tab-btn on">📐 角度數據</button>
-      </div>
-      <div class="card-body">
-        <div style="font-size:14px; color:var(--tx2); margin-bottom:20px;">${r.summary_zh}</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          ${Object.entries(r.angles).map(([k, v]) => `<div style="background:var(--sur2); padding:10px; border-radius:8px;">
-            <div style="font-size:10px; color:var(--tx4);">${TG[k]?.lbl || k}</div>
-            <div style="font-size:20px; font-weight:800; color:var(--or);">${v}°</div>
-          </div>`).join('')}
-        </div>
-        <button class="btn-orange" style="width:100%; margin
+</body>
+</html>
