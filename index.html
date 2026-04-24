@@ -889,6 +889,7 @@ function gst(v, t) {
 // ── STATE ────────────────────────────────────────────
 const S = {
   step: 1,
+  apiKey: (() => { try { return localStorage.getItem('of_api_key') || ''; } catch(e) { return ''; } })(),
   bdcURL: null, bdcImg: null,
   tdcURL: null, tdcImg: null,
   result: null,
@@ -980,6 +981,25 @@ function renderUpload() {
       <span style="font-family:var(--mono);font-size:10px;color:var(--tx3)">JPG / PNG · 側面拍攝</span>
     </div>
     <div class="card-body">
+      <!-- API KEY -->
+      <div style="background:#F8F8F8;border:1px solid var(--bd);border-radius:var(--rs);padding:14px 16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:var(--tx2);display:flex;align-items:center;gap:6px">
+            🔑 Anthropic API Key
+          </div>
+          <div id="api-status" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--er-bg);color:var(--er);border:1px solid var(--er-bd)">未設定</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off"
+            style="flex:1;padding:9px 12px;font-family:var(--mono);font-size:12px;border:1px solid var(--bd2);border-radius:var(--rs);background:var(--sur);color:var(--tx);outline:none;transition:border .15s;letter-spacing:.04em">
+          <button onclick="saveApiKey()" class="btn btn-dark btn-sm">儲存</button>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px">
+          API Key 僅儲存在你的瀏覽器，不會上傳至任何伺服器。
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--or);text-decoration:none">前往取得 →</a>
+        </div>
+      </div>
+
       <div class="instr-box">
         <div class="instr-title">📌 拍攝說明</div>
         <div class="instr-steps">
@@ -1326,6 +1346,7 @@ function loadImg(key, file) {
 // ── ANALYSIS ─────────────────────────────────────────
 async function startAnalysis() {
   if (!S.bdcURL && !S.tdcURL) { set({ error: '請先上傳至少一張照片' }); return; }
+  if (!S.apiKey) { set({ error: '請先設定 Anthropic API Key（點上方輸入框）' }); return; }
 
   // Switch to step 2 immediately
   S.step = 2;
@@ -1369,6 +1390,7 @@ async function startAnalysis() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        apiKey: S.apiKey,
         model: 'claude-opus-4-5',
         max_tokens: 1200,
         messages: [{ role: 'user', content }],
@@ -1623,8 +1645,42 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
+
+// ── API KEY ──────────────────────────────────────────
+function saveApiKey() {
+  const input = document.getElementById('api-key-input');
+  const key = input?.value?.trim();
+  if (!key || !key.startsWith('sk-')) {
+    alert('請輸入正確的 API Key（以 sk- 開頭）');
+    return;
+  }
+  try { localStorage.setItem('of_api_key', key); } catch(e) {}
+  S.apiKey = key;
+  updateApiStatus();
+  alert('API Key 已儲存！');
+}
+
+function updateApiStatus() {
+  const el = document.getElementById('api-status');
+  const input = document.getElementById('api-key-input');
+  if (!el) return;
+  if (S.apiKey) {
+    el.style.background = 'var(--ok-bg)';
+    el.style.color = 'var(--ok)';
+    el.style.borderColor = 'var(--ok-bd)';
+    el.textContent = '✓ 已設定';
+    if (input) input.value = S.apiKey;
+  } else {
+    el.style.background = 'var(--er-bg)';
+    el.style.color = 'var(--er)';
+    el.style.borderColor = 'var(--er-bd)';
+    el.textContent = '未設定';
+  }
+}
+
 // ── INIT ─────────────────────────────────────────────
 render();
+updateApiStatus();
 </script>
 </body>
 </html>
