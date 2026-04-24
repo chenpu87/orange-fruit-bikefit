@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orange Fruit — SMART BIKEFIT</title>
+<title>SMART BIKEFIT — Orange Fruit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
 
 <nav class="navbar">
   <div class="nav-left">
-    <img src="logo-01.png" alt="Orange Fruit" class="nav-logo-main">
+    <img src="assets/logo-01.png" alt="Orange Fruit" class="nav-logo-main">
   </div>
   <div class="nav-right-text">SMART BIKEFIT</div>
 </nav>
@@ -48,7 +48,7 @@
 </div>
 
 <footer class="footer">
-  Orange Fruit AI BikeFit · v3.9 · Powered by Google Gemini AI
+  Orange Fruit AI BikeFit · v4.0 · Powered by Gemini Pro Vision
 </footer>
 
 <script>
@@ -93,7 +93,7 @@ function render() {
   }
 
   if (S.step === 2) {
-    v2.innerHTML = `<div class="card" style="text-align:center; padding:60px 0;">🚀 Gemini Pro 正在分析專業 BikeFit 數據...</div>`;
+    v2.innerHTML = `<div class="card" style="text-align:center; padding:60px 0;">🚀 Gemini Pro Vision 正在執行深度分析...</div>`;
   }
 
   if (S.step === 3 && S.result) {
@@ -122,7 +122,7 @@ async function startAnalysis() {
   S.step = 2; S.error = ''; render();
 
   try {
-    const prompt = `你是專業 Bikefit 分析師。請分析照片並回傳 JSON 格式數據，不要 Markdown。格式範例：{"summary_zh": "調整建議內容"}`;
+    const prompt = `你是專業 Bikefit 分析師。請分析這兩張照片並回傳 JSON 格式數據：{"summary_zh": "繁體中文調整建議內容"}`;
 
     const content = [
       { type: 'text', text: prompt },
@@ -146,7 +146,7 @@ async function startAnalysis() {
     if (jsonMatch) {
       S.result = JSON.parse(jsonMatch[0]);
     } else {
-      throw new Error("無法解析回傳格式");
+      throw new Error("無法解析回傳格式，請再試一次。");
     }
     
     S.step = 3;
