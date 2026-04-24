@@ -35,7 +35,7 @@
 
 <nav class="navbar">
   <div class="nav-left">
-    <img src="logo-01.png" alt="Orange Fruit" class="nav-logo-main">
+    <img src="assets/logo-01.png" alt="Orange Fruit" class="nav-logo-main">
   </div>
   <div class="nav-right-text">SMART BIKEFIT</div>
 </nav>
@@ -100,7 +100,7 @@ function render() {
     v3.innerHTML = `
       <div class="card">
         <h3 style="margin-bottom:16px;">✅ AI 分析報告</h3>
-        <div style="background:#F4F4F4; padding:20px; border-radius:12px; margin-bottom:20px; line-height:1.8;">
+        <div style="background:#F4F4F4; padding:20px; border-radius:12px; margin-bottom:20px; line-height:1.8; white-space: pre-wrap;">
           ${S.result.summary_zh || '分析完成。'}
         </div>
         <button class="analyze-btn" onclick="location.reload()">↺ 重新分析</button>
@@ -121,7 +121,7 @@ async function startAnalysis() {
   if (!S.bdcURL || !S.tdcURL) return;
   S.step = 2; S.error = ''; render();
   try {
-    const prompt = `你是專業 Bikefit 分析師。請分析這兩張照片並回傳 JSON：{"summary_zh": "繁體中文調整建議內容"}`;
+    const prompt = `你是專業 Bikefit 分析師。請分析這兩張照片（BDC與TDC）並提供詳細調整建議。請僅以 JSON 格式回傳：{"summary_zh": "調整建議內容"}`;
     const content = [
       { type: 'text', text: prompt },
       { type: 'image', source: { type: 'base64', data: S.bdcURL.split(',')[1] } },
@@ -134,7 +134,9 @@ async function startAnalysis() {
     });
     const data = await resp.json();
     if (data.error) throw new Error(data.error.message);
-    const raw = data.content[0].text.replace(/```json|```/g, '').trim();
+    
+    // 清洗回傳文字，確保 JSON 解析成功
+    let raw = data.content[0].text.replace(/```json|```/g, '').trim();
     const jsonMatch = raw.match(/\{.*\}/s);
     S.result = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary_zh: raw };
     S.step = 3;
