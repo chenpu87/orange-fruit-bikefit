@@ -907,7 +907,7 @@ function set(p) {
 
 function afterRender() {
   if (S.tab === 'visual' && S.result && S.bdcImg) requestAnimationFrame(drawSkeleton);
-  if (S.tab === 'sim'    && S.result)             requestAnimationFrame(drawSim);
+  if (S.tab === 'sim'    && S.result && S.bdcImg)  requestAnimationFrame(drawSim);
 }
 
 // ── RENDER ───────────────────────────────────────────
@@ -1208,12 +1208,15 @@ function renderReport() {
   ].map(({ k, adj }) => {
     const t = TG[k]; const orig = ang[k]; if (!orig) return '';
     const st = gst(adj, t); const col = C[st];
-    return `<div class="pill-card">
-      <div class="pill-name">${t.lbl}</div>
-      <div class="pill-vals">
-        <span class="pill-before">${orig}°</span>
-        <span class="pill-arrow">→</span>
-        <span class="pill-after" style="color:${col}">${adj}°</span>
+    const diff = adj - orig;
+    const diffStr = diff > 0 ? '+'+diff+'°' : diff+'°';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E8E6">
+      <div style="font-size:11px;color:#7A7A78;font-family:var(--mono)">${t.lbl}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px">
+        <span style="color:#ADADAA">${orig}°</span>
+        <span style="color:#D8D8D5">→</span>
+        <span style="color:${col};font-weight:700">${adj}°</span>
+        <span style="font-size:10px;color:${col}">(${diffStr})</span>
       </div>
     </div>`;
   }).join('');
@@ -1248,19 +1251,19 @@ function renderReport() {
         <div class="sim-ctrl-title">即時調整模擬</div>
         ${ctrlHTML}
         <button class="btn btn-ghost btn-sm" id="btn-sim-reset" style="width:100%;justify-content:center">↺ 重置所有</button>
-      </div>
-      <div class="sim-view">
-        <div class="sim-canvases">
-          <div class="sim-canvas-wrap">
-            <canvas id="sim-before"></canvas>
-            <div class="sim-canvas-tag" style="color:rgba(255,255,255,.5)">CURRENT</div>
-          </div>
-          <div class="sim-canvas-wrap">
-            <canvas id="sim-after"></canvas>
-            <div class="sim-canvas-tag" style="color:var(--or)">ADJUSTED</div>
-          </div>
+        <div style="margin-top:8px;padding:10px;background:#F9F9F8;border-radius:8px;border:1px solid #E8E8E6">
+          <div style="font-family:var(--mono);font-size:9px;color:#ADADAA;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">角度預測變化</div>
+          ${pills}
         </div>
-        <div class="pill-row">${pills}</div>
+      </div>
+      <div class="sim-view" style="padding:16px;flex:1">
+        <div style="position:relative;border-radius:12px;overflow:hidden;background:#111">
+          <canvas id="sim-photo" style="width:100%;display:block"></canvas>
+          <div style="position:absolute;top:8px;left:10px;font-family:var(--mono);font-size:10px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(0,0,0,.5);padding:3px 8px;border-radius:4px">ADJUSTMENT PREVIEW</div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--tx3);text-align:center;font-family:var(--mono)">
+          橙色箭頭 = 建議調整方向 · 長度 = 調整幅度
+        </div>
       </div>
     </div>`,
   };
@@ -1409,7 +1412,21 @@ async function startAnalysis() {
 }
 
 function buildPrompt(has2) {
-  return `你是Bikefit分析師。${has2?'圖一BDC(6點鐘下死點)，圖二TDC(1點鐘上死點)。':'分析此騎乘照片。'}只回傳JSON，禁止任何說明或markdown：{"angles":{"knee_extension":<整數或null>,"knee_flexion":<整數>,"hip_angle":<整數>,"ankle_max":<整數>,"shoulder_wrist":<整數>,"back_angle":<整數>},"skeleton":{"hip":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"neck":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中>"],"summary_zh":"<2句繁中摘要>"}`;
+  return `你是專業Bikefit分析師。${has2?'圖一是BDC(曲柄6點鐘下死點)，圖二是TDC(曲柄1點鐘近上死點)。':'請分析此騎乘側面照片。'}
+
+skeleton座標規則（極為重要，必須精確）：
+- 座標以BDC圖像素位置為準，x=左到右比例，y=上到下比例（左上角=0,0）
+- neck：頸肩交接處（約在頭部下方、肩膀正上方）
+- shoulder：肩峰最高點（手臂與軀幹交接的骨性突起）
+- hip：髖關節大轉子（褲子側邊最突出的骨頭位置）
+- elbow：肘關節中心
+- wrist：手腕關節中心（握把附近手腕彎折處）
+- knee：膝關節中心（大腿與小腿交接）
+- ankle：踝關節中心（腳踝骨頭）
+- foot：第五蹠骨頭（腳掌外側前端，腳尖方向）
+- 每個座標必須對應照片中該關節的實際像素位置，不可估算偏差超過3%
+
+只回傳JSON，完全禁止任何說明文字或markdown符號：{"angles":{"knee_extension":<BDC膝伸展角整數或null>,"knee_flexion":<TDC膝屈曲角整數>,"hip_angle":<髖角整數>,"ankle_max":<腳踝背屈角整數>,"shoulder_wrist":<肩腕角整數>,"back_angle":<背部角整數>},"skeleton":{"hip":{"x":<0-1>,"y":<0-1>},"knee":{"x":<0-1>,"y":<0-1>},"ankle":{"x":<0-1>,"y":<0-1>},"shoulder":{"x":<0-1>,"y":<0-1>},"elbow":{"x":<0-1>,"y":<0-1>},"wrist":{"x":<0-1>,"y":<0-1>},"neck":{"x":<0-1>,"y":<0-1>},"foot":{"x":<0-1>,"y":<0-1>}},"overall":"good或needs_adjustment或poor","confidence":<0-100>,"bottom_up_issues":["<繁中問題>"],"summary_zh":"<3句繁中摘要>"}`;
 }
 
 // ── SKELETON CANVAS ──────────────────────────────────
@@ -1509,57 +1526,107 @@ function drawSkeleton() {
 
 // ── SIM CANVAS ───────────────────────────────────────
 function drawSim() {
-  drawStick('sim-before', false);
-  drawStick('sim-after',  true);
-}
+  const c = document.getElementById('sim-photo');
+  if (!c || !S.bdcImg || !S.result?.skeleton) return;
+  const ctx = c.getContext('2d');
+  const IMG = S.bdcImg;
+  const cw = c.parentElement?.clientWidth || 500;
+  const scale = cw / IMG.width;
+  c.width  = Math.round(IMG.width  * scale);
+  c.height = Math.round(IMG.height * scale);
+  const W = c.width, H = c.height;
 
-function drawStick(id, isAfter) {
-  const c = document.getElementById(id);
-  if (!c || !S.result?.skeleton) return;
-  const ctx = c.getContext('2d'), W = 260, H = 240;
-  c.width = W; c.height = H;
-  ctx.fillStyle = '#0C0E13'; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = .5;
-  for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.drawImage(IMG, 0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,.25)';
+  ctx.fillRect(0, 0, W, H);
 
   const sk = S.result.skeleton;
-  const pts = {};
+  const sim = S.sim;
+  const orig = {};
   for (const [n, co] of Object.entries(sk)) {
-    if (co) pts[n] = { x: co.x * W * .34 + W * .33, y: co.y * H * .34 + H * .07 };
+    if (co) orig[n] = { x: co.x * W, y: co.y * H };
   }
+  const adj = {};
+  for (const n of Object.keys(orig)) adj[n] = { x: orig[n].x, y: orig[n].y };
 
-  if (isAfter) {
-    const mm = .00075;
-    ['hip','knee','ankle','foot'].forEach(j =>     { if (pts[j]) pts[j].y += -S.sim.sh * mm * H * 1.5; });
-    ['hip','shoulder','neck','elbow','wrist'].forEach(j => { if (pts[j]) pts[j].x += S.sim.sb * mm * W * .25; });
-    ['shoulder','neck','elbow','wrist'].forEach(j => { if (pts[j]) pts[j].y += -S.sim.st * mm * H * 1.1; });
-    ['wrist','elbow'].forEach(j =>                 { if (pts[j]) pts[j].x += S.sim.sl * mm * W; });
-  }
-
-  const gy = (pts.ankle?.y || H * .8) + 14;
-  ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
-  ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); ctx.setLineDash([]);
-
-  ctx.strokeStyle = isAfter ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.32)';
-  ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
-   ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a, b]) => {
-    if (pts[a] && pts[b]) {
-      ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke();
-    }
+  const mm = 0.0018;
+  ['hip','knee','ankle','foot'].forEach(j => {
+    if (adj[j]) { adj[j].y += -sim.sh * mm * H; adj[j].x += sim.sb * mm * W * 0.5; }
+  });
+  ['shoulder','neck','elbow','wrist'].forEach(j => {
+    if (adj[j]) adj[j].y += -sim.st * mm * H * 0.8;
+  });
+  ['elbow','wrist'].forEach(j => {
+    if (adj[j]) adj[j].x += sim.sl * mm * W * 0.6;
   });
 
-  const dc = isAfter ? '#FF3B3B' : 'rgba(255,59,59,.4)';
-  for (const [, p] of Object.entries(pts)) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = dc; ctx.fill();
-    if (isAfter) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.2; ctx.stroke(); }
+  const hasAdj = sim.sh !== 0 || sim.sb !== 0 || sim.st !== 0 || sim.sl !== 0;
+  const lw = Math.max(2, W / 240);
+
+  // 白色原始骨架
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)';
+  ctx.lineWidth = lw; ctx.lineCap = 'round';
+  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
+   ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b]) => {
+    if (!orig[a]||!orig[b]) return;
+    ctx.beginPath(); ctx.moveTo(orig[a].x,orig[a].y); ctx.lineTo(orig[b].x,orig[b].y); ctx.stroke();
+  });
+  ctx.restore();
+
+  if (hasAdj) {
+    // 橙色調整後骨架（虛線）
+    ctx.save();
+    ctx.strokeStyle = 'rgba(244,123,0,.85)';
+    ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.setLineDash([6,4]);
+    [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],
+     ['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b]) => {
+      if (!adj[a]||!adj[b]) return;
+      ctx.beginPath(); ctx.moveTo(adj[a].x,adj[a].y); ctx.lineTo(adj[b].x,adj[b].y); ctx.stroke();
+    });
+    ctx.setLineDash([]); ctx.restore();
+
+    // 調整箭頭
+    for (const j of ['hip','knee','ankle','shoulder','elbow','wrist']) {
+      if (!orig[j]||!adj[j]) continue;
+      const dx = adj[j].x - orig[j].x, dy = adj[j].y - orig[j].y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 4) continue;
+      const angle = Math.atan2(dy, dx);
+      const len = Math.min(dist, Math.max(20, W/22));
+      const ex = orig[j].x + Math.cos(angle)*len;
+      const ey = orig[j].y + Math.sin(angle)*len;
+      const hl = Math.max(10, W/55);
+      ctx.save();
+      ctx.strokeStyle = '#F47B00'; ctx.fillStyle = '#F47B00';
+      ctx.lineWidth = Math.max(2.5, W/180); ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(244,123,0,.7)'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.moveTo(orig[j].x,orig[j].y); ctx.lineTo(ex,ey); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex,ey);
+      ctx.lineTo(ex-hl*Math.cos(angle-.4), ey-hl*Math.sin(angle-.4));
+      ctx.lineTo(ex-hl*Math.cos(angle+.4), ey-hl*Math.sin(angle+.4));
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    }
   }
 
-  ctx.fillStyle = isAfter ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.3)';
-  ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-  ctx.fillText(isAfter ? 'ADJUSTED' : 'CURRENT', 8, 15);
+  // 白色關節點
+  const dotR = Math.max(5, W/100);
+  for (const [,p] of Object.entries(orig)) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+  }
+
+  if (!hasAdj) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.font = `${Math.max(13,W/36)}px -apple-system,sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('← 拖動左側滑桿查看調整效果', W/2, H - 14);
+    ctx.restore();
+  }
 }
 
 // ── EXPORT ───────────────────────────────────────────
