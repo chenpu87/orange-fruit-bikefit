@@ -1,6 +1,5 @@
 // api/analyze.js
 export default async function handler(req, res) {
-  // CORS 設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -22,24 +21,22 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 【修正】使用 v1 穩定端點，模型名稱不帶 -latest 以增加相容性
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 【最終修正】改回 v1beta。Log 顯示 v1 找不到模型，這是 Google 端點同步的已知問題。
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
-        generationConfig: {
-          temperature: 0.2
-        }
+        generationConfig: { temperature: 0.1 }
       }),
     });
 
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error?.message || `API 報錯 (HTTP ${response.status})`);
+      throw new Error(data.error?.message || `API 調用失敗 (HTTP ${response.status})`);
     }
 
     const resultText = data.candidates[0].content.parts[0].text;
