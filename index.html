@@ -3,63 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orange Fruit — SMART BIKEFIT</title>
+<title>SMART BIKEFIT — Orange Fruit</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --or: #F47B00; --dk: #0F0F0F; --bg: #F7F6F4; --sur: #FFFFFF; --bd: #E8E8E6; --font: 'DM Sans', sans-serif; }
-  body { font-family: var(--font); background: var(--bg); min-height: 100vh; }
-  .navbar { background: var(--dk); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; }
+  body { font-family: var(--font); background: var(--bg); color: #0F0F0F; min-height: 100vh; line-height: 1.5; }
+  .navbar { background: var(--dk); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .nav-logo-main { height: 42px; width: auto; object-fit: contain; }
-  .nav-right-text { color: #FFFFFF; font-size: 20px; font-weight: 800; }
+  .nav-right-text { color: #FFFFFF; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; }
   .page { max-width: 1020px; margin: 0 auto; padding: 32px 20px; }
-  .step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; }
+  .step-bar { display: flex; align-items: center; background: var(--sur); border: 1px solid var(--bd); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
   .step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
-  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bd); }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
   .step-circle.active { background: var(--dk); color: #fff; }
+  .step-circle.idle { background: var(--bd); color: #aaa; }
   .step-connector { flex: 1; height: 2px; background: var(--bd); margin: 0 12px; }
-  .card { background: var(--sur); border: 1px solid var(--bd); border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .card { background: var(--sur); border: 1px solid var(--bd); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 24px; animation: fadeUp 0.35s ease-out; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
-  .upload-slot { border: 2px dashed #D8D8D5; border-radius: 16px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #F9F9F8; overflow: hidden; }
-  .slot-preview { width: 100%; height: 100%; object-fit: cover; }
-  .analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 16px; border-radius: 12px; border: none; cursor: pointer; }
+  .upload-slot { border: 2px dashed #D8D8D5; border-radius: 16px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #F9F9F8; overflow: hidden; }
+  .slot-preview { width: 100%; height: 200px; object-fit: cover; }
+  .analyze-btn { width: 100%; background: var(--or); color: #fff; font-size: 16px; font-weight: 800; padding: 16px; border-radius: 12px; border: none; cursor: pointer; transition: background 0.2s; }
   .footer { background: var(--dk); padding: 24px; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; }
 </style>
 </head>
 <body>
 <nav class="navbar">
-  <div class="nav-left"><img src="logo-01.png" alt="Orange Fruit" class="nav-logo-main"></div>
+  <div class="nav-left">
+    <img src="logo-01.png" alt="Orange Fruit" class="nav-logo-main">
+  </div>
   <div class="nav-right-text">SMART BIKEFIT</div>
 </nav>
 <div class="page">
   <div class="step-bar" id="step-bar"></div>
-  <div id="view-main"></div>
+  <div id="view-1"></div>
+  <div id="view-2" style="display:none"></div>
+  <div id="view-3" style="display:none"></div>
 </div>
-<footer class="footer">Orange Fruit AI BikeFit · v4.4 · Model: Flash-Latest</footer>
+<footer class="footer">Orange Fruit AI BikeFit · v4.6 · Powered by Gemini 1.5 Flash</footer>
 <script>
-let S = { step: 1, bdc: null, tdc: null, result: null, error: '' };
+let S = { step: 1, bdcURL: null, tdcURL: null, result: null, error: '' };
 function render() {
   const sb = document.getElementById('step-bar');
-  const vm = document.getElementById('view-main');
-  sb.innerHTML = `<div class="step-item"><div class="step-circle ${S.step>=1?'active':''}">1</div> 上傳</div><div class="step-connector"></div><div class="step-item"><div class="step-circle ${S.step>=2?'active':''}">2</div> 分析</div><div class="step-connector"></div><div class="step-item"><div class="step-circle ${S.step>=3?'active':''}">3</div> 報告</div>`;
+  const v1 = document.getElementById('view-1');
+  const v2 = document.getElementById('view-2');
+  const v3 = document.getElementById('view-3');
+  sb.innerHTML = `<div class="step-item"><div class="step-circle ${S.step>=1?'active':'idle'}">1</div> 上傳</div><div class="step-connector"></div><div class="step-item"><div class="step-circle ${S.step>=2?'active':'idle'}">2</div> 分析</div><div class="step-connector"></div><div class="step-item"><div class="step-circle ${S.step>=3?'active':'idle'}">3</div> 報告</div>`;
+  v1.style.display = S.step === 1 ? 'block' : 'none';
+  v2.style.display = S.step === 2 ? 'block' : 'none';
+  v3.style.display = S.step === 3 ? 'block' : 'none';
   if (S.step === 1) {
-    vm.innerHTML = `<div class="card"><h3>📸 上傳騎乘側面照片</h3><div class="upload-grid"><div class="upload-slot" onclick="document.getElementById('f1').click()">${S.bdc ? `<img src="${S.bdc}" class="slot-preview">` : 'BDC (6點鐘)'}</div><input type="file" id="f1" hidden onchange="hF('bdc',this)"><div class="upload-slot" onclick="document.getElementById('f2').click()">${S.tdc ? `<img src="${S.tdc}" class="slot-preview">` : 'TDC (1點鐘)'}</div><input type="file" id="f2" hidden onchange="hF('tdc',this)"></div><button class="analyze-btn" onclick="go()">開始分析</button>${S.error ? `<p style="color:red;margin-top:10px;">${S.error}</p>`:''}</div>`;
-  } else if (S.step === 2) {
-    vm.innerHTML = `<div class="card" style="text-align:center;padding:40px 0;">🚀 正在呼叫 Gemini 最新模組分析中...</div>`;
-  } else {
-    vm.innerHTML = `<div class="card"><h3>✅ AI 分析建議</h3><div style="background:#F4F4F4;padding:20px;border-radius:12px;margin:20px 0;line-height:1.8;">${S.result}</div><button class="analyze-btn" onclick="location.reload()">重新分析</button></div>`;
+    v1.innerHTML = `<div class="card"><h3>📸 請上傳騎乘側面照片</h3><div class="upload-grid"><div class="upload-slot" onclick="document.getElementById('fi-bdc').click()">${S.bdcURL ? `<img src="${S.bdcURL}" class="slot-preview">` : '🦵 上傳 BDC (6點鐘)'}<input type="file" id="fi-bdc" hidden onchange="handleFile('bdc', this)"></div><div class="upload-slot" onclick="document.getElementById('fi-tdc').click()">${S.tdcURL ? `<img src="${S.tdcURL}" class="slot-preview">` : '🔄 上傳 TDC (1點鐘)'}<input type="file" id="fi-tdc" hidden onchange="handleFile('tdc', this)"></div></div><button class="analyze-btn" onclick="startAnalysis()">開始 AI 分析</button>${S.error ? `<div style="color:red; margin-top:10px; text-align:center;">⚠ ${S.error}</div>`:''}</div>`;
   }
+  if (S.step === 2) v2.innerHTML = `<div class="card" style="text-align:center; padding:60px 0;">🚀 Gemini 1.5 Flash 正在分析專業 BikeFit 數據...</div>`;
+  if (S.step === 3 && S.result) v3.innerHTML = `<div class="card"><h3>✅ 分析報告</h3><div style="background:#F4F4F4; padding:20px; border-radius:12px; margin:20px 0; line-height:1.8;">${S.result.summary_zh}</div><button class="analyze-btn" onclick="location.reload()">重新開始</button></div>`;
 }
-function hF(k, i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { S[k] = e.target.result; render(); }; r.readAsDataURL(f); }
-async function go() {
-  if (!S.bdc || !S.tdc) return; S.step = 2; render();
+function handleFile(k, i) {
+  const f = i.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = e => { S[k+'URL'] = e.target.result; render(); }; r.readAsDataURL(f);
+}
+async function startAnalysis() {
+  if (!S.bdcURL || !S.tdcURL) return;
+  S.step = 2; render();
   try {
-    const prompt = `你是專業 Bikefit 分析師。請分析這兩張照片，給出繁體中文的調整建議。`;
-    const content = [{ type: 'text', text: prompt }, { type: 'image', source: { type: 'base64', data: S.bdc.split(',')[1] } }, { type: 'image', source: { type: 'base64', data: S.tdc.split(',')[1] } }];
+    const prompt = `你是專業 Bikefit 分析師。請分析這兩張照片（BDC與TDC），僅以 JSON 格式回傳繁體中文建議：{"summary_zh": "您的調整建議內容"}`;
+    const content = [{ type: 'text', text: prompt }, { type: 'image', source: { type: 'base64', data: S.bdcURL.split(',')[1] } }, { type: 'image', source: { type: 'base64', data: S.tdcURL.split(',')[1] } }];
     const resp = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'user', content }] }) });
     const data = await resp.json();
     if (data.error) throw new Error(data.error.message);
-    S.result = data.content[0].text; S.step = 3;
+    let raw = data.content[0].text.replace(/```json|```/g, '').trim();
+    const jsonMatch = raw.match(/\{.*\}/s);
+    S.result = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary_zh: raw }; S.step = 3;
   } catch (err) { S.error = err.message; S.step = 1; }
   render();
 }
