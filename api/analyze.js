@@ -21,8 +21,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 使用 v1beta 並確保模型名稱包含完整路徑
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 改用 gemini-1.5-pro 模組，提供更強的視覺分析能力
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
         generationConfig: { 
           temperature: 0.1, 
-          maxOutputTokens: 1000
+          maxOutputTokens: 1500
         }
       }),
     });
