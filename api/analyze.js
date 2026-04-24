@@ -14,7 +14,6 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const userMessage = messages[0].content;
 
-    // 分離文字與圖片
     const textPart = userMessage.find(c => c.type === 'text')?.text || "";
     const imageParts = userMessage
       .filter(c => c.type === 'image')
@@ -22,8 +21,8 @@ export default async function handler(req, res) {
         inline_data: { mime_type: "image/jpeg", data: img.source.data }
       }));
 
-    // 使用 v1beta 確保與生成配置的相容性
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 使用穩定版 v1 端點，這是 gemini-1.5-flash 最穩定的呼叫方式
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -31,16 +30,18 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: textPart }, ...imageParts] }],
         generationConfig: { 
-          temperature: 0.1, // 降低隨機性以穩定輸出 JSON
+          temperature: 0.1, 
           maxOutputTokens: 1000
         }
       }),
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Gemini API 調用失敗');
+    if (!response.ok) {
+      // 擷取更詳細的錯誤訊息以便偵錯
+      throw new Error(data.error?.message || `Gemini API 調用失敗 (HTTP ${response.status})`);
+    }
 
-    // 取得 AI 回傳的純文字
     const resultText = data.candidates[0].content.parts[0].text;
 
     return res.status(200).json({
