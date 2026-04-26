@@ -245,14 +245,14 @@ const BG  = {ok:'rgba(11,138,92,.1)',wk:'rgba(184,106,0,.1)',er:'rgba(192,35,26,
 const LL  = {ok:'✓ 達標',wk:'△ 偏差',er:'✕ 超出',na:'—'};
 
 const JOINTS = [
-  {key:'neck',     lbl:'頸肩交接', color:'#FFD700', desc:'頸部與肩膀交接處'},
-  {key:'shoulder', lbl:'肩峰',     color:'#FF6B6B', desc:'肩膀最高骨性突起'},
-  {key:'hip',      lbl:'髖關節',   color:'#FF6B6B', desc:'褲腰側面最突出骨頭'},
-  {key:'elbow',    lbl:'手肘',     color:'#4ECDC4', desc:'手臂彎折中心點'},
-  {key:'wrist',    lbl:'手腕',     color:'#4ECDC4', desc:'握把附近手腕彎折處'},
-  {key:'knee',     lbl:'膝關節',   color:'#FF6B6B', desc:'大腿與小腿交接中心'},
-  {key:'ankle',    lbl:'踝關節',   color:'#FF6B6B', desc:'腳踝骨頭中心'},
-  {key:'foot',     lbl:'腳掌前端', color:'#FFD700', desc:'腳趾/腳掌最前端'},
+  {key:'wrist',    lbl:'手腕',         color:'#4ECDC4', desc:'握把附近手腕關節彎折處'},
+  {key:'elbow',    lbl:'手肘',         color:'#4ECDC4', desc:'手臂彎折中心點'},
+  {key:'shoulder', lbl:'肩峰',         color:'#FF6B6B', desc:'肩膀最高骨性突起（肩峰）'},
+  {key:'hip',      lbl:'髖關節轉子',   color:'#FF6B6B', desc:'褲腰側面最突出的大轉子骨頭'},
+  {key:'knee',     lbl:'膝關節',       color:'#FF6B6B', desc:'大腿與小腿交接中心'},
+  {key:'ankle',    lbl:'踝關節',       color:'#FF6B6B', desc:'外踝骨頭中心'},
+  {key:'heel',     lbl:'腳跟',         color:'#FFD700', desc:'腳跟最後端骨頭'},
+  {key:'foot',     lbl:'腳掌前端外側', color:'#FFD700', desc:'小拇指側第五蹠骨頭（腳掌外側前端凸出點）'},
 ];
 
 function gst(v,t){
@@ -458,7 +458,7 @@ function initJointCanvas(){
 
     // 連線
     ctx.strokeStyle='#FFFFFF';ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
-    [['neck','shoulder'],['shoulder','hip'],['shoulder','elbow'],['elbow','wrist'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b])=>{
+    [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
       if(!j[a]||!j[b])return;
       ctx.beginPath();ctx.moveTo(j[a].x*W,j[a].y*H);ctx.lineTo(j[b].x*W,j[b].y*H);ctx.stroke();
     });
@@ -686,7 +686,7 @@ function drawSkeleton(){
   // 白色骨架連線
   ctx.save();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=lw;ctx.lineCap='round';
   ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
-  [['neck','shoulder'],['shoulder','elbow'],['elbow','wrist'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','foot']].forEach(([a,b])=>{
+  [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
     if(!pts[a]||!pts[b])return;
     ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke();
   });
