@@ -400,6 +400,13 @@ const JOINTS = [
   {key:'foot',     lbl:'腳掌前端外側', color:'#FFD700', desc:'小拇指側第五蹠骨頭（腳掌外側前端凸出點）'},
 ];
 
+// ── 車輛標示點（用於計算實體尺寸 mm）──
+const BIKE_POINTS = [
+  {key:'bb',         lbl:'BB（五通）',     color:'#FF8800', desc:'曲柄旋轉軸心（五通中心點）'},
+  {key:'saddle_nose', lbl:'座墊鼻端',      color:'#FF8800', desc:'座墊最前端尖點'},
+  {key:'hb_center',   lbl:'把手中心',      color:'#FF8800', desc:'變把握位中心（手腕握住的地方）'},
+];
+
 function gst(v,t){
   if(v==null)return'na';
   if(v>=t.min&&v<=t.max)return'ok';
@@ -444,8 +451,9 @@ const FLEX_OPTS   = [
 ];
 
 const S = {
-  step:0,  // 0=問卷, 1=上傳, 2=標關節, 3=AI分析, 4=報告
+  step:0,  // 0=問卷, 1=上傳, 2=標關節, 2.5=標車輛, 3=AI分析, 4=報告
   qstep:1, // 問卷子步驟 1-6
+  markStage:'joints', // 'joints' | 'bike' — Step 2 內的子階段
   questionnaire: {
     age:'', gender:'', height:'', weight:'', frequency:'',
     bike_brand:'', bike_model:'', bike_size:'',
@@ -455,6 +463,9 @@ const S = {
   bdcURL:null, bdcImg:null,
   tdcURL:null, tdcImg:null,
   joints:null,
+  bikePoints:null,    // {bb, saddle_nose, hb_center}
+  crankLength:170,    // mm - 曲柄長度（預設 170mm）
+  measurements:null,  // 計算結果（saddle_height, setback 等）
   result:null,
   error:'',
   tab:'angles',
@@ -823,11 +834,17 @@ function bindV1(){
     slot.addEventListener('dragleave',()=>slot.classList.remove('drag'));
     slot.addEventListener('drop',e=>{e.preventDefault();slot.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadImg(k,f);});
   });
-  document.getElementById('btn-to-joints')?.addEventListener('click',()=>set({step:2,error:'',joints:{}}));
+  document.getElementById('btn-to-joints')?.addEventListener('click',()=>set({step:2,markStage:'joints',error:'',joints:{},bikePoints:null}));
 }
 
 // ══ V2: JOINT MARKING ════════════════════════════════════
 function renderV2(){
+  // 根據 markStage 切換子畫面
+  if(S.markStage === 'bike') return renderV2Bike();
+  return renderV2Joints();
+}
+
+function renderV2Joints(){
   const joints=S.joints||{};
   const done=Object.keys(joints).length;
   const allDone=done>=JOINTS.length;
@@ -836,7 +853,7 @@ function renderV2(){
   document.getElementById('v2').innerHTML=`
   <div class="card fade">
     <div class="card-head">
-      <div class="card-title">🎯 標示關節點</div>
+      <div class="card-title">🎯 步驟 1/2：標示關節點</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${done}/${JOINTS.length}</span>
         <button class="btn-ghost btn-sm" id="btn-back-j">← 返回</button>
@@ -844,7 +861,7 @@ function renderV2(){
     </div>
     <div class="joint-status">
       ${allDone
-        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 所有關節點已標示完成！</div>`
+        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 所有關節點已標示完成！下一步：標示車輛重點</div>`
         :`<div class="joint-dot" style="background:${cur.color}">${done+1}</div>
           <div><div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${cur.lbl}</span></div>
           <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
@@ -857,8 +874,8 @@ function renderV2(){
       <button class="btn-ghost btn-sm" id="btn-undo" ${done===0?'disabled':''}>↩ 撤銷</button>
       <button class="btn-ghost btn-sm" id="btn-reset-j" ${done===0?'disabled':''}>✕ 重置</button>
       <div style="flex:1"></div>
-      <button class="btn-dark" id="btn-to-analyze" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 22px">
-        開始 AI 分析 →
+      <button class="btn-dark" id="btn-to-bike" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 22px">
+        下一步：車輛標示 →
       </button>
     </div>
     <div class="joint-tag-row">
@@ -880,7 +897,93 @@ function renderV2(){
     const nj={...S.joints};delete nj[keys[keys.length-1]];set({joints:nj});
   });
   document.getElementById('btn-reset-j')?.addEventListener('click',()=>set({joints:{}}));
-  document.getElementById('btn-to-analyze')?.addEventListener('click',()=>{if(allDone)startAnalysis();});
+  document.getElementById('btn-to-bike')?.addEventListener('click',()=>{
+    if(allDone) set({markStage:'bike', bikePoints:{}});
+  });
+}
+
+function renderV2Bike(){
+  const bp = S.bikePoints || {};
+  const done = Object.keys(bp).length;
+  const allDone = done >= BIKE_POINTS.length;
+  const cur = BIKE_POINTS[Math.min(done, BIKE_POINTS.length-1)];
+
+  document.getElementById('v2').innerHTML=`
+  <div class="card fade">
+    <div class="card-head">
+      <div class="card-title">🚲 步驟 2/2：標示車輛重點</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${done}/${BIKE_POINTS.length}</span>
+        <button class="btn-ghost btn-sm" id="btn-back-bike">← 返回關節</button>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,#FFF3E0,#FFE8C5);border-bottom:1px solid #F5C87A;padding:12px 18px">
+      <div style="font-size:12px;color:#7A4500;line-height:1.65">
+        <b>📐 為什麼需要這 3 個點？</b><br>
+        標示這些車輛重點後，系統可計算出座墊高度、龍頭距離、把手 Drop 等實體尺寸（mm），用於專業 Bikefit 報告。
+      </div>
+    </div>
+    <div class="joint-status">
+      ${allDone
+        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 車輛標示完成！請選擇曲柄長度後開始分析</div>`
+        :`<div class="joint-dot" style="background:${cur.color}">${done+1}</div>
+          <div><div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${cur.lbl}</span></div>
+          <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
+    </div>
+    <div class="joint-wrap${allDone?' done-marking':''}" id="joint-wrap">
+      <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:540px;object-fit:contain">
+      <canvas id="joint-canvas"></canvas>
+    </div>
+    ${allDone?`
+      <div style="padding:14px 18px;background:#F9F9F8;border-top:1px solid var(--bd)">
+        <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:8px">🔧 曲柄長度（用於 mm 校正）</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${[165, 170, 172.5, 175].map(len => `
+            <button data-crank="${len}" class="crank-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid ${S.crankLength===len?'var(--or)':'#D8D8D8'};background:${S.crankLength===len?'linear-gradient(135deg,#FFF3E0,#FFF0D8)':'#fff'};font-size:12px;font-weight:${S.crankLength===len?'700':'500'};color:${S.crankLength===len?'var(--tx)':'var(--tx2)'};cursor:pointer;font-family:var(--font)">
+              ${len} mm
+            </button>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px">不確定？常見公路車為 170mm</div>
+      </div>
+    `:''}
+    <div style="padding:13px 18px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-ghost btn-sm" id="btn-undo-bike" ${done===0?'disabled':''}>↩ 撤銷</button>
+      <button class="btn-ghost btn-sm" id="btn-reset-bike" ${done===0?'disabled':''}>✕ 重置</button>
+      <div style="flex:1"></div>
+      <button class="btn-dark" id="btn-to-analyze" ${allDone?'':'disabled'} style="font-size:13px;padding:10px 22px">
+        開始 AI 分析 →
+      </button>
+    </div>
+    <div class="joint-tag-row">
+      ${BIKE_POINTS.map((j,i)=>{
+        const isDone=bp[j.key];
+        return`<div class="jtag" style="background:${isDone?j.color+'22':'var(--sur2)'};border:1px solid ${isDone?j.color:'var(--bd)'}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${isDone?j.color:'var(--bd2)'}"></div>
+          <span style="color:${isDone?'var(--tx)':'var(--tx3)'};font-size:11px">${j.lbl}</span>
+          ${isDone?`<span style="color:${j.color};font-size:10px">✓</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('btn-back-bike')?.addEventListener('click',()=>set({markStage:'joints', bikePoints:null}));
+  document.getElementById('btn-undo-bike')?.addEventListener('click',()=>{
+    const keys=Object.keys(S.bikePoints||{});
+    if(!keys.length)return;
+    const nbp={...S.bikePoints};delete nbp[keys[keys.length-1]];set({bikePoints:nbp});
+  });
+  document.getElementById('btn-reset-bike')?.addEventListener('click',()=>set({bikePoints:{}}));
+  document.querySelectorAll('.crank-btn').forEach(b => b.addEventListener('click',()=>{
+    set({crankLength: parseFloat(b.dataset.crank)});
+  }));
+  document.getElementById('btn-to-analyze')?.addEventListener('click',()=>{
+    if(allDone){
+      // 計算量測值
+      const m = computeMeasurements(S.joints, S.bikePoints, S.crankLength);
+      S.measurements = m;
+      startAnalysis();
+    }
+  });
 }
 
 function initJointCanvas(){
@@ -906,13 +1009,18 @@ function initJointCanvas(){
     const W=canvas.width,H=canvas.height;
     ctx.clearRect(0,0,W,H);
     const j=S.joints||{};
+    const bp=S.bikePoints||{};
+    const isBikeStage = S.markStage === 'bike';
 
-    // 連線
-    ctx.strokeStyle='#FFFFFF';ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
+    // 關節骨架連線（在車輛標示階段也要顯示，但變半透明）
+    ctx.save();
+    ctx.strokeStyle = isBikeStage ? 'rgba(255,255,255,.4)' : '#FFFFFF';
+    ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
     [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
       if(!j[a]||!j[b])return;
       ctx.beginPath();ctx.moveTo(j[a].x*W,j[a].y*H);ctx.lineTo(j[b].x*W,j[b].y*H);ctx.stroke();
     });
+    ctx.restore();
 
     // 關節點
     JOINTS.forEach((jd,i)=>{
@@ -920,6 +1028,7 @@ function initJointCanvas(){
       const px=j[jd.key].x*W,py=j[jd.key].y*H;
       const r=Math.max(8,W/75);
       ctx.save();
+      if(isBikeStage) ctx.globalAlpha = 0.5;
       ctx.beginPath();ctx.arc(px,py,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
       ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
       ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
@@ -927,18 +1036,78 @@ function initJointCanvas(){
       ctx.fillText(i+1,px,py);
       ctx.restore();
     });
+
+    // 車輛標示點（只在 bike stage 顯示，較大、橘色十字）
+    if(isBikeStage){
+      // 連線：BB → 座墊鼻、BB → 把手、座墊鼻 → 把手（reach）
+      if(bp.bb && bp.saddle_nose){
+        ctx.save();
+        ctx.strokeStyle='rgba(255,136,0,.6)';
+        ctx.lineWidth=Math.max(2,W/300);
+        ctx.setLineDash([6,4]);
+        ctx.beginPath();
+        ctx.moveTo(bp.bb.x*W, bp.bb.y*H);
+        ctx.lineTo(bp.saddle_nose.x*W, bp.saddle_nose.y*H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+      if(bp.bb && bp.hb_center){
+        ctx.save();
+        ctx.strokeStyle='rgba(255,136,0,.6)';
+        ctx.lineWidth=Math.max(2,W/300);
+        ctx.setLineDash([6,4]);
+        ctx.beginPath();
+        ctx.moveTo(bp.bb.x*W, bp.bb.y*H);
+        ctx.lineTo(bp.hb_center.x*W, bp.hb_center.y*H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      BIKE_POINTS.forEach((bd,i)=>{
+        if(!bp[bd.key])return;
+        const px=bp[bd.key].x*W, py=bp[bd.key].y*H;
+        const r=Math.max(10, W/65);
+        ctx.save();
+        // 外光暈
+        ctx.beginPath();ctx.arc(px,py,r+6,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,136,0,.25)';ctx.fill();
+        // 主圓
+        ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);
+        ctx.fillStyle=bd.color;ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+        // 十字準心
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(px-r*0.6,py);ctx.lineTo(px+r*0.6,py);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(px,py-r*0.6);ctx.lineTo(px,py+r*0.6);ctx.stroke();
+        // 編號標籤
+        ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(11,W/55)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('B'+(i+1), px, py - r - 12);
+        ctx.restore();
+      });
+    }
   }
 
-  const allDone=Object.keys(S.joints||{}).length>=JOINTS.length;
+  const isBikeStage = S.markStage === 'bike';
+  const allDone = isBikeStage
+    ? Object.keys(S.bikePoints||{}).length >= BIKE_POINTS.length
+    : Object.keys(S.joints||{}).length >= JOINTS.length;
 
   canvas.onclick=function(e){
     if(allDone)return;
     const r=canvas.getBoundingClientRect();
     const x=(e.clientX-r.left)/canvas.width;
     const y=(e.clientY-r.top)/canvas.height;
-    const curJ=JOINTS[Object.keys(S.joints||{}).length];
-    if(!curJ)return;
-    set({joints:{...(S.joints||{}),[curJ.key]:{x,y}}});
+    if(isBikeStage){
+      const cur = BIKE_POINTS[Object.keys(S.bikePoints||{}).length];
+      if(!cur)return;
+      set({bikePoints:{...(S.bikePoints||{}),[cur.key]:{x,y}}});
+    } else {
+      const curJ=JOINTS[Object.keys(S.joints||{}).length];
+      if(!curJ)return;
+      set({joints:{...(S.joints||{}),[curJ.key]:{x,y}}});
+    }
   };
 
   img.onload=resize;
@@ -1063,8 +1232,27 @@ function renderV4(){
       </div>
     </div>`;
 
+  // 量測卡片（如果有 measurements 數據）
+  const m = S.measurements;
+  const measureHTML = m ? `
+    <div style="background:linear-gradient(135deg,#FFF3E0,#FFE8C5);border:1px solid #F5C87A;border-radius:12px;padding:16px;margin-top:14px">
+      <div style="font-size:11px;font-family:var(--mono);color:#7A4500;letter-spacing:.08em;font-weight:700;margin-bottom:10px">📏 BIKE MEASUREMENTS（自動計算）</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+        ${m.saddle_height_mm!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">座墊高度</div><div style="font-size:20px;font-weight:800;color:#F47B00;letter-spacing:-.02em;margin-top:3px">${m.saddle_height_mm}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.saddle_setback_mm!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">座墊後傾</div><div style="font-size:20px;font-weight:800;color:#F47B00;letter-spacing:-.02em;margin-top:3px">${m.saddle_setback_mm}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.reach_mm!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Reach</div><div style="font-size:20px;font-weight:800;color:#F47B00;letter-spacing:-.02em;margin-top:3px">${m.reach_mm}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.hb_drop_mm!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">HB Drop</div><div style="font-size:20px;font-weight:800;color:#F47B00;letter-spacing:-.02em;margin-top:3px">${m.hb_drop_mm}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.saddle_x_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">SX (Saddle X)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.saddle_x_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.saddle_y_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">SY (Saddle Y)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.saddle_y_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.hb_x_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">HX (HB X)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.hb_x_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.hb_y_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">HY (HB Y)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.hb_y_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+      </div>
+      <div style="font-size:10px;color:#7A4500;margin-top:10px;font-family:var(--mono)">校正基準：曲柄 ${m.crank_length_mm}mm · BB→踝距離 ${m.bb_to_ankle_dist}mm</div>
+    </div>
+  ` : '';
+
   const tabContent={
-    angles:`<div class="agrid">${angCards}</div><div class="sum-card"><div class="sum-lbl">AI 分析摘要</div><div class="sum-txt">${r.summary_zh||'—'}</div></div>`,
+    angles:`<div class="agrid">${angCards}</div>${measureHTML}<div class="sum-card" style="margin-top:14px"><div class="sum-lbl">AI 分析摘要</div><div class="sum-txt">${r.summary_zh||'—'}</div></div>`,
     visual:`<div class="sk-wrap"><div class="sk-bar"><span>關節標示比較圖</span><span class="sk-tag">藍：你的姿勢 · 紅：建議調整</span></div><canvas id="sk-canvas"></canvas></div>
       <div class="sk-legend">
         <div class="leg-item"><svg width="22" height="9"><line x1="0" y1="4.5" x2="22" y2="4.5" stroke="white" stroke-width="2.8" stroke-linecap="round"/></svg><span style="color:var(--tx2)"><b>白線</b> = 你目前的骨架</span></div>
@@ -1094,13 +1282,84 @@ function renderV4(){
 
   document.querySelectorAll('.tab-btn[data-tab]').forEach(b=>b.addEventListener('click',()=>set({tab:b.dataset.tab})));
   document.getElementById('btn-new')?.addEventListener('click',resetAll);
-  document.getElementById('btn-redo')?.addEventListener('click',()=>set({step:2,result:null,joints:{},tab:'angles'}));
+  document.getElementById('btn-redo')?.addEventListener('click',()=>set({step:2,markStage:'joints',result:null,joints:{},bikePoints:null,measurements:null,tab:'angles'}));
   document.getElementById('btn-export')?.addEventListener('click',exportReport);
   document.getElementById('btn-unlock')?.addEventListener('click',unlockFullReport);
 }
 
 // ══ IMAGE LOAD ═══════════════════════════════════════════
-function loadImg(key,file){
+// ══ MEASUREMENTS — 從 BB + 曲柄長度計算實體 mm 數據 ══════════
+function computeMeasurements(joints, bikePoints, crankLengthMM){
+  if(!joints || !bikePoints || !bikePoints.bb) return null;
+  const bb = bikePoints.bb;
+  const sn = bikePoints.saddle_nose;
+  const hb = bikePoints.hb_center;
+  const ankle = joints.ankle;
+
+  // 校正：用 BB → 踝關節距離 = 曲柄長度（BDC 時踏板在 6 點鐘）
+  // 注意：實際上 BB→Pedal Spindle = 曲柄長度，踝關節在 pedal 上方約 30-50mm
+  // 這裡用簡化模型，假設 BDC 踝關節 ≈ pedal spindle 高度
+  if(!ankle) return null;
+
+  const dxAnkle = (ankle.x - bb.x);
+  const dyAnkle = (ankle.y - bb.y);
+  const distBBtoAnkle = Math.sqrt(dxAnkle*dxAnkle + dyAnkle*dyAnkle);
+
+  // 因為座標是 0-1 比例，需要先轉為「比例距離」
+  // 假設照片寬度 = W、高度 = H，但因為比例無法得知絕對 W/H，
+  // 改用 BB → Ankle 比例距離直接對應曲柄 mm
+  // scale = mm / (比例距離單位)
+  const scale = crankLengthMM / distBBtoAnkle;
+
+  function distMM(p1, p2){
+    if(!p1 || !p2) return null;
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    return Math.sqrt(dx*dx + dy*dy) * scale;
+  }
+  function offsetMM(p1, p2){
+    // p1 相對 p2 的 (X 水平, Y 垂直) 偏移，正 X = 在 p2 右側，正 Y = 在 p2 下方
+    if(!p1 || !p2) return {x:null, y:null};
+    return {
+      x: (p1.x - p2.x) * scale,
+      y: (p1.y - p2.y) * scale,
+    };
+  }
+
+  const m = {
+    crank_length_mm: crankLengthMM,
+    scale_mm_per_unit: Math.round(scale * 1000) / 1000,
+    bb_to_ankle_dist: Math.round(distBBtoAnkle * scale),
+  };
+
+  // 1. Saddle Height = BB → Saddle Nose 距離（沿座管中心線的近似值）
+  if(sn){
+    m.saddle_height_mm = Math.round(distMM(sn, bb));
+    // SX = 座墊鼻 - BB 水平差（負值 = 座墊在 BB 後方 = setback）
+    const sOff = offsetMM(sn, bb);
+    m.saddle_setback_mm = Math.round(-sOff.x);  // 正值 = setback
+    m.saddle_x_from_bb = Math.round(sOff.x);
+    m.saddle_y_from_bb = Math.round(-sOff.y);    // 正值 = 座墊在 BB 上方
+  }
+
+  // 2. Handlebar 量測
+  if(hb){
+    const hOff = offsetMM(hb, bb);
+    m.hb_x_from_bb = Math.round(hOff.x);
+    m.hb_y_from_bb = Math.round(-hOff.y);
+
+    if(sn){
+      // HB to Saddle 水平距離（Reach）
+      m.reach_mm = Math.round((hb.x - sn.x) * scale);
+      // HB Drop = 座墊 Y - 把手 Y（正值 = 把手低於座墊）
+      m.hb_drop_mm = Math.round((hb.y - sn.y) * scale);
+    }
+  }
+
+  return m;
+}
+
+
   const r=new FileReader();
   r.onload=e=>{
     const img=new Image();
@@ -1179,7 +1438,7 @@ async function startAnalysis(){
 
   }catch(err){
     addLog('✕ '+err.message,'err');
-    setTimeout(()=>set({step:2,error:'分析失敗：'+err.message,logs:[],pct:0}),2500);
+    setTimeout(()=>set({step:2,markStage:'bike',error:'分析失敗：'+err.message,logs:[],pct:0}),2500);
   }
 }
 
@@ -1557,6 +1816,9 @@ function buildFullReportPayload(contact){
     summary_zh: r.summary_zh,
     bottom_up_issues: r.bottom_up_issues || [],
     joints: S.joints || {},
+    bike_points: S.bikePoints || {},
+    crank_length: S.crankLength || 170,
+    measurements: S.measurements || {},
     bdc_image: S.bdcURL || '',
     tdc_image: S.tdcURL || '',
   };
@@ -1590,7 +1852,9 @@ function showSuccessUI(name, email, requestId, isDevMode){
 // ══ RESET ════════════════════════════════════════════════
 function resetAll(){
   S.bdcImg=null;S.tdcImg=null;
-  set({step:0, qstep:1, error:'',bdcURL:null,tdcURL:null,joints:null,result:null,tab:'angles',logs:[],pct:0,
+  set({step:0, qstep:1, markStage:'joints', error:'',bdcURL:null,tdcURL:null,
+    joints:null, bikePoints:null, crankLength:170, measurements:null,
+    result:null,tab:'angles',logs:[],pct:0,
     questionnaire:{age:'',gender:'',height:'',weight:'',frequency:'',bike_brand:'',bike_model:'',bike_size:'',flexibility:'',injury:[],pain:[],pain_other:''}
   });
 }
