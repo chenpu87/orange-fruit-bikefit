@@ -1183,8 +1183,17 @@ function renderV3(){
 
 // ══ V4: REPORT ══════════════════════════════════════════
 function renderV4(){
-  if(!S.result)return;
-  const r=S.result,ang=r.angles;
+  if(!S.result){
+    document.getElementById('v4').innerHTML = `
+      <div class="card fade" style="text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:14px">⚠️</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:8px">分析資料載入中…</div>
+        <div style="font-size:13px;color:var(--tx3);margin-bottom:20px">如果一直停留在此畫面，代表 AI 分析失敗。請點擊重試。</div>
+        <button class="btn-orange" onclick="set({step:2,markStage:'bike',result:null})">← 返回重試</button>
+      </div>`;
+    return;
+  }
+  const r=S.result,ang=r.angles||{};
   const oc=r.overall==='good'?COL.ok:r.overall==='needs_adjustment'?COL.wk:COL.er;
   const ol=r.overall==='good'?'✓ 姿勢良好':r.overall==='needs_adjustment'?'⚠ 需要調整':'✕ 需要改善';
 
@@ -1542,8 +1551,10 @@ async function startAnalysis(){
     setTimeout(()=>set({result:parsed,step:4,error:'',tab:'angles'}),700);
 
   }catch(err){
+    console.error('Analysis error:', err);
     addLog('✕ '+err.message,'err');
-    setTimeout(()=>set({step:2,markStage:'bike',error:'分析失敗：'+err.message,logs:[],pct:0}),2500);
+    addLog('（請開啟 F12 Console 查看詳細錯誤）','err');
+    setTimeout(()=>set({step:2,markStage:'bike',error:'分析失敗：'+err.message+'\n請開啟瀏覽器 Console (F12) 查看詳細錯誤',logs:[],pct:0}),3500);
   }
 }
 
