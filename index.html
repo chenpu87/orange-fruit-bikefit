@@ -463,6 +463,7 @@ const S = {
   },
   bdcURL:null, bdcImg:null,
   tdcURL:null, tdcImg:null,
+  bikeURL:null, bikeImg:null,    // 空車照（無人，傳動側）
   joints:null,
   bikePoints:null,    // {bb, saddle_nose, hb_center}
   crankLength:170,    // mm - 曲柄長度（預設 170mm）
@@ -822,13 +823,26 @@ function renderV1(){
         ${slot('bdc','bdc','BDC','下死點 — 曲柄 6 點鐘','🦵','曲柄朝下<br>測量膝伸展角')}
         ${slot('tdc','tdc','TDC','近上死點 — 曲柄 1 點鐘','🔄','曲柄朝前上<br>測膝屈曲與髖角')}
       </div>
+
+      <div style="margin:18px 0 12px;padding:14px 16px;background:linear-gradient(135deg,#E8F0FF,#DCE7FF);border:1.5px solid #8AA9DD;border-radius:12px">
+        <div style="font-size:12px;font-weight:800;color:#1F3D77;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          🚲 第 3 張：空車照（傳動側）
+        </div>
+        <div style="font-size:11px;color:#1F3D77;line-height:1.7">
+          請拍一張<b>無人坐在車上</b>的側面照，從<b>傳動側（齒盤側）</b>拍攝。需清楚看到貼上的 4 個藍色紙膠帶。此照片用於精確標示車輛重點，計算 mm 數據。
+        </div>
+      </div>
+      <div class="upload-grid" style="grid-template-columns:1fr">
+        ${slot('bike','bdc','BIKE','空車照 — 傳動側','🚲','無人乘坐<br>從齒盤側拍攝<br>需看到藍色膠帶 ①②③④')}
+      </div>
+
       <div class="cta">
         <div>
-          <div class="cta-title">${has2?'✓ 兩張照片就緒，下一步標示關節':can?'已上傳一張，建議補上另一張':'請上傳騎乘側面照片'}</div>
+          <div class="cta-title">${has2 && S.bikeURL ? '✓ 三張照片就緒，下一步標示關節' : has2 ? '騎乘照已就緒，建議再上傳空車照' : can?'已上傳一張，建議補上另一張':'請上傳騎乘側面照片'}</div>
           <div class="cta-sub">Bottom-Up Protocol · Gemini AI Vision</div>
         </div>
         <button class="btn-analyze" id="btn-to-joints" ${can?'':'disabled'}>
-          <span>下一步：標示關節</span><span class="arr">→</span>
+          <span>下一步:標示關節</span><span class="arr">→</span>
         </button>
       </div>
     </div>
@@ -839,7 +853,7 @@ function renderV1(){
 
 function bindV1(){
   document.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();document.getElementById('fi-'+b.dataset.pick)?.click();}));
-  ['bdc','tdc'].forEach(k=>{
+  ['bdc','tdc','bike'].forEach(k=>{
     const fi=document.getElementById('fi-'+k);
     if(fi)fi.onchange=e=>{if(e.target.files[0])loadImg(k,e.target.files[0]);};
   });
@@ -924,6 +938,8 @@ function renderV2Bike(){
   const done = Object.keys(bp).length;
   const allDone = done >= BIKE_POINTS.length;
   const cur = BIKE_POINTS[Math.min(done, BIKE_POINTS.length-1)];
+  const useImg = S.bikeURL || S.bdcURL || S.tdcURL;
+  const usingFallback = !S.bikeURL;
 
   document.getElementById('v2').innerHTML=`
   <div class="card fade">
@@ -936,10 +952,17 @@ function renderV2Bike(){
     </div>
     <div style="background:linear-gradient(135deg,#FFF3E0,#FFE8C5);border-bottom:1px solid #F5C87A;padding:12px 18px">
       <div style="font-size:12px;color:#7A4500;line-height:1.65">
-        <b>📐 為什麼需要這 3 個點？</b><br>
-        標示這些車輛重點後，系統可計算出座墊高度、龍頭距離、把手 Drop 等實體尺寸（mm），用於專業 Bikefit 報告。
+        <b>📐 為什麼需要這 4 個點？</b><br>
+        標示這些車輛重點後，系統可計算出座墊高度、龍頭距離、把手 Drop、Saddle→Hood 等實體尺寸（mm），用於專業 Bikefit 報告。
       </div>
     </div>
+    ${usingFallback ? `
+      <div style="background:#FFE8E8;border-bottom:1px solid #E5A6A6;padding:10px 18px">
+        <div style="font-size:11px;color:#8C2D2D;line-height:1.65;display:flex;gap:6px;align-items:flex-start">
+          <span>⚠️</span>
+          <span>你尚未上傳「空車照」，目前以騎乘照進行標示。<b>人會擋住部分車架，建議返回上傳空車照</b>以提升精度。</span>
+        </div>
+      </div>` : ''}
     <div class="joint-status">
       ${allDone
         ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 車輛標示完成！請選擇曲柄長度後開始分析</div>`
@@ -948,7 +971,7 @@ function renderV2Bike(){
           <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
     </div>
     <div class="joint-wrap${allDone?' done-marking':''}" id="joint-wrap">
-      <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:540px;object-fit:contain">
+      <img id="joint-img" src="${useImg}" style="width:100%;display:block;max-height:540px;object-fit:contain">
       <canvas id="joint-canvas"></canvas>
     </div>
     ${allDone?`
@@ -1028,31 +1051,35 @@ function initJointCanvas(){
     const j=S.joints||{};
     const bp=S.bikePoints||{};
     const isBikeStage = S.markStage === 'bike';
+    // 在車輛模式 + 用了空車照 → 不顯示關節（座標對不上）
+    const showJoints = !isBikeStage || !S.bikeURL;
 
-    // 關節骨架連線（在車輛標示階段也要顯示，但變半透明）
-    ctx.save();
-    ctx.strokeStyle = isBikeStage ? 'rgba(255,255,255,.4)' : '#FFFFFF';
-    ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
-    [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
-      if(!j[a]||!j[b])return;
-      ctx.beginPath();ctx.moveTo(j[a].x*W,j[a].y*H);ctx.lineTo(j[b].x*W,j[b].y*H);ctx.stroke();
-    });
-    ctx.restore();
-
-    // 關節點
-    JOINTS.forEach((jd,i)=>{
-      if(!j[jd.key])return;
-      const px=j[jd.key].x*W,py=j[jd.key].y*H;
-      const r=Math.max(8,W/75);
+    // 關節骨架連線
+    if(showJoints){
       ctx.save();
-      if(isBikeStage) ctx.globalAlpha = 0.5;
-      ctx.beginPath();ctx.arc(px,py,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
-      ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
-      ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(10,W/65)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(i+1,px,py);
+      ctx.strokeStyle = isBikeStage ? 'rgba(255,255,255,.4)' : '#FFFFFF';
+      ctx.lineWidth=Math.max(2,W/280);ctx.lineCap='round';
+      [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
+        if(!j[a]||!j[b])return;
+        ctx.beginPath();ctx.moveTo(j[a].x*W,j[a].y*H);ctx.lineTo(j[b].x*W,j[b].y*H);ctx.stroke();
+      });
       ctx.restore();
-    });
+
+      // 關節點
+      JOINTS.forEach((jd,i)=>{
+        if(!j[jd.key])return;
+        const px=j[jd.key].x*W,py=j[jd.key].y*H;
+        const r=Math.max(8,W/75);
+        ctx.save();
+        if(isBikeStage) ctx.globalAlpha = 0.5;
+        ctx.beginPath();ctx.arc(px,py,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
+        ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
+        ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(10,W/65)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(i+1,px,py);
+        ctx.restore();
+      });
+    }
 
     // 車輛標示點（只在 bike stage 顯示，較大、橘色十字）
     if(isBikeStage){
@@ -1371,18 +1398,14 @@ function computeMeasurements(joints, bikePoints, crankLengthMM){
   const ankle = joints.ankle;
 
   // 校正：用 BB → 踝關節距離 = 曲柄長度（BDC 時踏板在 6 點鐘）
-  // 注意：實際上 BB→Pedal Spindle = 曲柄長度，踝關節在 pedal 上方約 30-50mm
-  // 這裡用簡化模型，假設 BDC 踝關節 ≈ pedal spindle 高度
+  // ⚠️ 這個校正只在「車輛標示用了騎乘照（BDC）」時才精準
+  // 如果用了空車照，踝關節座標來自騎乘照，BB 來自空車照，兩者比例可能不同
+  // 這時校正會失準。標記為 calibration_warning 以便後台修正
   if(!ankle) return null;
 
   const dxAnkle = (ankle.x - bb.x);
   const dyAnkle = (ankle.y - bb.y);
   const distBBtoAnkle = Math.sqrt(dxAnkle*dxAnkle + dyAnkle*dyAnkle);
-
-  // 因為座標是 0-1 比例，需要先轉為「比例距離」
-  // 假設照片寬度 = W、高度 = H，但因為比例無法得知絕對 W/H，
-  // 改用 BB → Ankle 比例距離直接對應曲柄 mm
-  // scale = mm / (比例距離單位)
   const scale = crankLengthMM / distBBtoAnkle;
 
   function distMM(p1, p2){
@@ -1903,6 +1926,7 @@ function buildFullReportPayload(contact){
     measurements: S.measurements || {},
     bdc_image: S.bdcURL || '',
     tdc_image: S.tdcURL || '',
+    bike_image: S.bikeURL || '',
   };
 }
 
@@ -1933,8 +1957,8 @@ function showSuccessUI(name, email, requestId, isDevMode){
 
 // ══ RESET ════════════════════════════════════════════════
 function resetAll(){
-  S.bdcImg=null;S.tdcImg=null;
-  set({step:0, qstep:1, markStage:'joints', error:'',bdcURL:null,tdcURL:null,
+  S.bdcImg=null;S.tdcImg=null;S.bikeImg=null;
+  set({step:0, qstep:1, markStage:'joints', error:'',bdcURL:null,tdcURL:null,bikeURL:null,
     joints:null, bikePoints:null, crankLength:170, measurements:null,
     result:null,tab:'angles',logs:[],pct:0,
     questionnaire:{age:'',gender:'',height:'',weight:'',frequency:'',bike_brand:'',bike_model:'',bike_size:'',flexibility:'',injury:[],pain:[],pain_other:''}
