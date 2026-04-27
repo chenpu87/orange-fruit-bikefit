@@ -402,9 +402,10 @@ const JOINTS = [
 
 // ── 車輛標示點（用於計算實體尺寸 mm）──
 const BIKE_POINTS = [
-  {key:'bb',         lbl:'BB（五通）',     color:'#FF8800', desc:'曲柄旋轉軸心（五通中心點）'},
-  {key:'saddle_nose', lbl:'座墊鼻端',      color:'#FF8800', desc:'座墊最前端尖點'},
-  {key:'hb_center',   lbl:'把手中心',      color:'#FF8800', desc:'變把握位中心（手腕握住的地方）'},
+  {key:'bb',          lbl:'BB（五通）',      color:'#FF8800', desc:'曲柄旋轉軸心（齒盤中央，藍膠帶 ③）'},
+  {key:'saddle_nose', lbl:'座墊中心點',      color:'#FF8800', desc:'座墊上方藍膠帶 ① 位置'},
+  {key:'hb_center',   lbl:'把手中心',        color:'#FF8800', desc:'把手橫向中心，藍膠帶 ② 位置'},
+  {key:'hood',        lbl:'變把握位 Hood',   color:'#FF8800', desc:'實際騎乘握把處，藍膠帶 ④ 位置'},
 ];
 
 function gst(v,t){
@@ -801,6 +802,22 @@ function renderV1(){
           <div class="instr-step"><div class="instr-num">3</div><div>AI 根據你標示的精確位置計算角度並生成報告</div></div>
         </div>
       </div>
+
+      <div style="background:linear-gradient(135deg,#FFF8E8,#FFF3D6);border:1.5px solid #F5C87A;border-radius:12px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;color:#7A4500;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          📐 拍照前準備（提升量測精度）
+        </div>
+        <div style="font-size:11px;color:#7A4500;line-height:1.7;margin-bottom:10px">
+          為了讓系統算出更準確的座墊高度、Reach 等數據，請在<b>單車上貼上 4 個藍色紙膠帶標記</b>，再拍照：
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid #F5C87A;font-size:11px;color:#1A1A1A;line-height:1.9">
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">①</span><span><b>座墊中心點</b>：以座墊寬度量測，從鼻端往後量，貼在中心線</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">②</span><span><b>把手中心點</b>：把手橫向最高點/變把握位處</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">③</span><span><b>五通 BB 中心</b>：曲柄旋轉軸心位置（齒盤中央）</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">④</span><span><b>變把握位（Hood）</b>：實際騎乘時手腕握住的位置</span></div>
+        </div>
+        <div style="font-size:10px;color:#7A4500;margin-top:8px;font-style:italic">💡 沒貼也可以使用，但精準度會降低。完整報告需要這些標記。</div>
+      </div>
       <div class="upload-grid">
         ${slot('bdc','bdc','BDC','下死點 — 曲柄 6 點鐘','🦵','曲柄朝下<br>測量膝伸展角')}
         ${slot('tdc','tdc','TDC','近上死點 — 曲柄 1 點鐘','🔄','曲柄朝前上<br>測膝屈曲與髖角')}
@@ -1174,19 +1191,45 @@ function renderV4(){
       addRec('🤸','ok','柔軟度：良好 ✓',`柔軟度佳（${Q.flexibility}），可承受較進階的競賽姿勢。`,null);
     }
   }
-  // 疼痛症狀（高優先級）
+  // 疼痛症狀（高優先級，依照 BikeRadar 醫學分類）
   if(Q.pain && Q.pain.length>0 && !Q.pain.includes('目前沒有任何疼痛')){
     Q.pain.forEach(p=>{
       if(p==='腳底板麻木') addRec('🚨','er','疼痛：腳底板麻木',`常見原因：Cleat 位置太前 / 鞋墊支撐不足 / 鞋楦過窄。建議調整 Cleat 後退或試用足弓墊。`,'Cleat 後退 + 足弓墊');
       else if(p==='肩頸痠痛') addRec('🚨','er','疼痛：肩頸痠痛',`常見原因：龍頭過長 / 把手過低 / 軀幹角度太前傾。建議縮短龍頭或增加墊片。`,'縮短龍頭 / 加墊片');
       else if(p==='手部麻木') addRec('🚨','er','疼痛：手部麻木',`常見原因：手腕重壓造成尺神經壓迫。檢查肩腕角是否 <75°，建議調整把手位置減少手部承重。`,'減少手部承重');
-      else if(p.includes('膝蓋內側')) addRec('🚨','er','疼痛：膝蓋內側',`常見原因：Cleat 角度偏外 / Q-Factor 過寬 / 座管偏移。建議檢查 Cleat 角度並考慮使用墊片內側支撐。`,'Cleat 角度檢查');
-      else if(p.includes('膝蓋外側')) addRec('🚨','er','疼痛：膝蓋外側',`常見原因：髂脛束過緊 / Cleat 內傾 / 座墊過高。建議降低座墊 2-3mm 並做髂脛束放鬆。`,'降低座墊 + 放鬆');
+      // ── 膝蓋疼痛：依 BikeRadar 醫學分類成 4 區 ──
+      else if(p==='膝蓋內側疼痛'||p==='膝蓋外側疼痛') {
+        addRec('🚨','er',`疼痛：${p}（內外側 Region 3）`,
+          `📘 醫學分類：膝蓋兩側疼痛幾乎與「Cleat 鞋扣片設定」直接相關，會影響內外側副韌帶（MCL/LCL）。Cleat 角度位置不當會影響 Q 角度（雙腳間距）或導致膝關節過度旋轉。`,
+          'Cleat 角度與 Q-Factor 重新校正');
+      }
       else if(p==='後下腰疼痛') addRec('🚨','er','疼痛：後下腰',`常見原因：髖部柔軟度不足 / 座墊角度錯誤 / 上半身過度前傾。建議檢查座墊水平與髖角閉合度。`,'檢查座墊水平');
       else if(p==='背部疼痛') addRec('🚨','wk','疼痛：背部',`常見原因：核心肌力不足 / 把位太低 / 騎姿過長。建議加強核心訓練並評估上半身姿勢。`,'核心訓練');
       else if(p==='坐骨/臀部疼痛') addRec('🚨','wk','疼痛：坐骨/臀部',`常見原因：座墊不適 / 座墊角度過低 / 尺寸不合。建議重新評估座墊。`,'座墊重新評估');
       else if(p==='大腿疼痛') addRec('🚨','wk','疼痛：大腿',`常見原因：股四頭肌過度使用 / 座墊位置偏前。建議檢查 KOPS（膝蓋與踏板的相對位置）。`,'KOPS 檢查');
     });
+
+    // ── 額外推斷：根據疼痛位置 + 角度數據，推斷可能的疼痛區域 ──
+    const hasKneePain = Q.pain.some(p => p.includes('膝蓋'));
+    const ke = a.knee_extension;
+    if(hasKneePain && ke != null) {
+      if(ke < 25) {
+        addRec('🩻','er','可能：膝蓋前側疼痛（Region 1）',
+          `📘 醫學說明：髕股骨疼痛症候群（Patellar Compression Syndrome）— 又稱「跑步者膝」。膝伸展角度 ${ke}° 過小，代表座墊太低或曲柄過長，造成髕骨過度受壓。\n\n身體因素：大腿外側肌肉變得比內側肌肉（VMO 股內側斜肌）更強壯緊繃，導致髕骨偏離中心。\n\n復健建議：(1) 鬆開外側 — 伸展按摩大腿外側 1 週；(2) 加強內側 — 靠牆深蹲、弓箭步強化 VMO；(3) 檢查座墊高度。`,
+          '升高座墊 + 強化 VMO');
+      }
+      if(ke > 40) {
+        addRec('🩻','er','可能：膝蓋後側疼痛（Region 2）',
+          `📘 醫學說明：膝蓋過度伸展（Hyperextension）— 持續性後側疼痛應檢查是否為「貝克氏囊腫」（Baker's Cyst）。膝伸展角度 ${ke}° 過大，代表座墊太高或太靠後。\n\n建議方向：降低座墊 5-10mm、座墊往前 5mm。如果疼痛持續請就醫。`,
+          '降低座墊 + 前移');
+      }
+    }
+    // ITBS（髂脛束症候群）— 區域 4
+    if(Q.pain.includes('膝蓋外側疼痛')) {
+      addRec('🩻','er','可能：髂脛束症候群（ITBS / Region 4）',
+        `📘 醫學說明：髂脛束（ITB）是從骨盆延伸到膝蓋下方的厚纖維組織帶。隨著時間變緊，當膝蓋反覆彎曲伸直時，會在股骨末端凸起處摩擦發炎。\n\n身體因素：臀中肌（Gluteus Medius）無力\n自行車設定：鎖鞋鞋底板導致腳尖過度內八\n\n復健：急性期 RICE（休息+冰敷+抗炎）；康復期專注伸展髂脛束 + 加強臀中肌（不只 VMO）。`,
+        '伸展 ITB + 強化臀中肌');
+    }
   }
   // 受傷歷史
   if(Q.injury && Q.injury.length>0 && !Q.injury.includes('目前無受傷')){
@@ -1246,8 +1289,12 @@ function renderV4(){
         ${m.saddle_y_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">SY (Saddle Y)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.saddle_y_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
         ${m.hb_x_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">HX (HB X)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.hb_x_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
         ${m.hb_y_from_bb!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">HY (HB Y)</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.hb_y_from_bb}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
+        ${m.saddle_to_hood_mm!=null?`<div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #F5C87A"><div style="font-size:10px;color:#888;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">座墊→Hood</div><div style="font-size:18px;font-weight:800;color:#F47B00;margin-top:3px">${m.saddle_to_hood_mm}<span style="font-size:11px;font-weight:600;color:#888;margin-left:4px">mm</span></div></div>`:''}
       </div>
       <div style="font-size:10px;color:#7A4500;margin-top:10px;font-family:var(--mono)">校正基準：曲柄 ${m.crank_length_mm}mm · BB→踝距離 ${m.bb_to_ankle_dist}mm</div>
+      <div style="font-size:11px;color:#7A4500;margin-top:6px;line-height:1.6">
+        <b>⚠ 精準度提示：</b>數值會因拍攝角度與標記精度而有偏差。如果你<b>沒有貼藍色紙膠帶</b>，誤差可能達 ±10-20mm。完整報告請申請專業 Bikefitter 校正。
+      </div>
     </div>
   ` : '';
 
@@ -1260,7 +1307,31 @@ function renderV4(){
         <div class="leg-item"><svg width="22" height="9"><line x1="0" y1="4.5" x2="22" y2="4.5" stroke="#50D278" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="5 3"/></svg><span style="color:var(--tx2)"><b>綠虛線</b> = 建議調整後的骨架</span></div>
         <div class="leg-item"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4.5" fill="#E84949"/></svg><span style="color:var(--tx2)"><b>紅點</b> = 建議的關節位置</span></div>
       </div>`,
-    recs:`<div class="rec-list">${recHTML}</div>${unlockHTML}`,
+    recs:`<div style="background:linear-gradient(135deg,#FFF8E8,#FFF3D6);border:1px solid #F5C87A;border-radius:12px;padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="font-size:20px;flex-shrink:0">⚠️</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#7A4500;margin-bottom:5px">關於本分析報告的精準度</div>
+            <div style="font-size:11px;color:#7A4500;line-height:1.7">
+              這份分析是基於照片影像分析，可能會因拍攝角度、鏡頭畸變、姿勢瞬間變化而失真。我們希望讓更多騎士先了解 Bikefit 的概念，但若想得到真正準確的調整數據，最佳方案還是<b>親自找專業 Bikefitter</b>面對面進行調整。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#1A1A1A,#2A2A2A);border-radius:12px;padding:18px 20px;margin-bottom:14px;color:#fff;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(244,123,0,.3),transparent);border-radius:50%"></div>
+        <div style="position:relative">
+          <div style="font-size:11px;font-family:var(--mono);color:#F47B00;letter-spacing:.12em;font-weight:700;margin-bottom:6px">☕ ONLINE CONSULTATION</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:6px">想線上一對一聊聊？</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:12px">
+            一杯咖啡的費用，換來真心建議與安心。如果預算充足，建議親自到 Bikefitter 處進行完整 Fitting；如果想先聊聊釐清方向，歡迎預約線上諮詢。
+          </div>
+          <button id="btn-consult" style="background:transparent;color:#F47B00;border:1.5px solid #F47B00;font-weight:700;font-size:12px;padding:8px 16px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:var(--font);transition:all .2s">
+            預約線上諮詢 <span>→</span>
+          </button>
+        </div>
+      </div>
+      <div class="rec-list">${recHTML}</div>${unlockHTML}`,
   };
 
   document.getElementById('v4').innerHTML=`
@@ -1270,9 +1341,9 @@ function renderV4(){
       <div class="opill" style="background:${oc}18;color:${oc};border:1.5px solid ${oc}55">${ol}</div>
     </div>
     <div class="tabs">
-      ${[['angles','📐 角度分析'],['visual','🦴 關節標示'],['recs','💡 調整建議']].map(([id,lbl])=>`<button class="tab-btn${S.tab===id?' on':''}" data-tab="${id}">${lbl}</button>`).join('')}
+      ${[['angles','📐 角度分析'],['recs','💡 調整建議']].map(([id,lbl])=>`<button class="tab-btn${S.tab===id?' on':''}" data-tab="${id}">${lbl}</button>`).join('')}
     </div>
-    ${['angles','visual','recs'].map(id=>`<div class="tpanel${S.tab===id?' on':''}" id="tp-${id}">${tabContent[id]}</div>`).join('')}
+    ${['angles','recs'].map(id=>`<div class="tpanel${S.tab===id?' on':''}" id="tp-${id}">${tabContent[id]}</div>`).join('')}
     <div class="rpt-actions">
       <button class="btn-ghost btn-sm" id="btn-new">← 新分析</button>
       <button class="btn-sm" id="btn-redo">重新標示</button>
@@ -1285,6 +1356,9 @@ function renderV4(){
   document.getElementById('btn-redo')?.addEventListener('click',()=>set({step:2,markStage:'joints',result:null,joints:{},bikePoints:null,measurements:null,tab:'angles'}));
   document.getElementById('btn-export')?.addEventListener('click',exportReport);
   document.getElementById('btn-unlock')?.addEventListener('click',unlockFullReport);
+  document.getElementById('btn-consult')?.addEventListener('click',()=>{
+    alert('☕ 線上諮詢預約\n\n請聯絡 Bikefitter：\n📧 orange.fruit.co@gmail.com\n📱 LINE: @orangefruit\n\n（一對一 30-45 分鐘線上諮詢，費用相當於一杯精品咖啡）');
+  });
 }
 
 // ══ IMAGE LOAD ═══════════════════════════════════════════
@@ -1354,6 +1428,14 @@ function computeMeasurements(joints, bikePoints, crankLengthMM){
       // HB Drop = 座墊 Y - 把手 Y（正值 = 把手低於座墊）
       m.hb_drop_mm = Math.round((hb.y - sn.y) * scale);
     }
+  }
+
+  // 3. Hood 量測（座墊到變把握位的距離）
+  const hood = bikePoints.hood;
+  if(hood && sn){
+    m.saddle_to_hood_mm = Math.round(distMM(hood, sn));
+    m.hood_x_from_bb = Math.round(offsetMM(hood, bb).x);
+    m.hood_y_from_bb = Math.round(-offsetMM(hood, bb).y);
   }
 
   return m;
