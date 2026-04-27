@@ -1247,7 +1247,7 @@ function renderV4(){
 
     // ── 額外推斷：根據疼痛位置 + 角度數據，推斷可能的疼痛區域 ──
     const hasKneePain = Q.pain.some(p => p.includes('膝蓋'));
-    const ke = a.knee_extension;
+    const ke = ang.knee_extension;
     if(hasKneePain && ke != null) {
       if(ke < 25) {
         addRec('🩻','er','可能：膝蓋前側疼痛（Region 1）',
