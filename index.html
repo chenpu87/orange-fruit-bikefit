@@ -464,7 +464,7 @@ const S = {
 function set(p){Object.assign(S,p);render();postRender();}
 function postRender(){
   if(S.step===2)setTimeout(initJointCanvas,80);
-  if(S.tab==='visual'&&S.result&&S.bdcImg)requestAnimationFrame(drawSkeleton);
+  if(S.tab==='visual'&&S.result)requestAnimationFrame(drawSkeleton);
 }
 
 // ══ RENDER ═══════════════════════════════════════════════
@@ -992,16 +992,87 @@ function renderV4(){
   const sh=ang.shoulder_wrist;
   if(sh!=null){if(sh<75)addRec('💪','wk','Layer 4：手臂承重偏大',`肩腕角 ${sh}° < 75°，建議加墊片 5-10mm。`,'加墊片');else if(sh>95)addRec('💪','wk','Layer 4：把手偏高',`肩腕角 ${sh}° > 95°，可減墊片。`,'減墊片');else addRec('💪','ok','Layer 4/5：上半身良好 ✓',`肩腕角 ${sh}°，承重合理。`,null);}
   (r.bottom_up_issues||[]).forEach(s=>{if(s&&s.length>3)addRec('🤖','wk','AI 補充觀察',s,null);});
+
+  // ── 結合問卷數據的個人化建議 ──
+  const Q = S.questionnaire || {};
+  // 柔軟度
+  if(Q.flexibility){
+    if(Q.flexibility.includes('膝蓋以上')||Q.flexibility.includes('膝蓋左右')){
+      addRec('🤸','wk','柔軟度：須注意',`你的屈體前彎較吃力。柔軟度不足會限制髖角下壓，建議增加伸展訓練（梨狀肌、腿後肌、髂腰肌）並考慮較高把位 / 較開髖角設定。`,'柔軟度伸展');
+    } else if(Q.flexibility.includes('小腿中段')||Q.flexibility.includes('腳踝附近')){
+      addRec('🤸','wk','柔軟度：中等',`柔軟度普通，騎乘時注意暖身，避免長時間下把位導致下背緊繃。`,'暖身伸展');
+    } else {
+      addRec('🤸','ok','柔軟度：良好 ✓',`柔軟度佳（${Q.flexibility}），可承受較進階的競賽姿勢。`,null);
+    }
+  }
+  // 疼痛症狀（高優先級）
+  if(Q.pain && Q.pain.length>0 && !Q.pain.includes('目前沒有任何疼痛')){
+    Q.pain.forEach(p=>{
+      if(p==='腳底板麻木') addRec('🚨','er','疼痛：腳底板麻木',`常見原因：Cleat 位置太前 / 鞋墊支撐不足 / 鞋楦過窄。建議調整 Cleat 後退或試用足弓墊。`,'Cleat 後退 + 足弓墊');
+      else if(p==='肩頸痠痛') addRec('🚨','er','疼痛：肩頸痠痛',`常見原因：龍頭過長 / 把手過低 / 軀幹角度太前傾。建議縮短龍頭或增加墊片。`,'縮短龍頭 / 加墊片');
+      else if(p==='手部麻木') addRec('🚨','er','疼痛：手部麻木',`常見原因：手腕重壓造成尺神經壓迫。檢查肩腕角是否 <75°，建議調整把手位置減少手部承重。`,'減少手部承重');
+      else if(p.includes('膝蓋內側')) addRec('🚨','er','疼痛：膝蓋內側',`常見原因：Cleat 角度偏外 / Q-Factor 過寬 / 座管偏移。建議檢查 Cleat 角度並考慮使用墊片內側支撐。`,'Cleat 角度檢查');
+      else if(p.includes('膝蓋外側')) addRec('🚨','er','疼痛：膝蓋外側',`常見原因：髂脛束過緊 / Cleat 內傾 / 座墊過高。建議降低座墊 2-3mm 並做髂脛束放鬆。`,'降低座墊 + 放鬆');
+      else if(p==='後下腰疼痛') addRec('🚨','er','疼痛：後下腰',`常見原因：髖部柔軟度不足 / 座墊角度錯誤 / 上半身過度前傾。建議檢查座墊水平與髖角閉合度。`,'檢查座墊水平');
+      else if(p==='背部疼痛') addRec('🚨','wk','疼痛：背部',`常見原因：核心肌力不足 / 把位太低 / 騎姿過長。建議加強核心訓練並評估上半身姿勢。`,'核心訓練');
+      else if(p==='坐骨/臀部疼痛') addRec('🚨','wk','疼痛：坐骨/臀部',`常見原因：座墊不適 / 座墊角度過低 / 尺寸不合。建議重新評估座墊。`,'座墊重新評估');
+      else if(p==='大腿疼痛') addRec('🚨','wk','疼痛：大腿',`常見原因：股四頭肌過度使用 / 座墊位置偏前。建議檢查 KOPS（膝蓋與踏板的相對位置）。`,'KOPS 檢查');
+    });
+  }
+  // 受傷歷史
+  if(Q.injury && Q.injury.length>0 && !Q.injury.includes('目前無受傷')){
+    const injStr = Q.injury.filter(i=>i!=='目前無受傷').join('、');
+    addRec('🩺','wk','受傷歷史：請特別注意',`你的受傷部位：${injStr}。Bikefit 調整時須避免加重這些部位的負荷，建議分次微調。`,'分次微調');
+  }
+  // 騎車頻率對應建議
+  if(Q.frequency){
+    if(Q.frequency==='每天騎'||Q.frequency==='每週 4-5 次'){
+      addRec('💪','ok','騎乘習慣：高頻率',`騎乘量大（${Q.frequency}），微小的 Fit 不對都會累積成傷害，建議每 6 個月複查一次姿勢。`,null);
+    } else if(Q.frequency==='每週 1 次以下'){
+      addRec('🚴','wk','騎乘習慣：低頻',`騎乘頻率較低（${Q.frequency}），姿勢可能尚未適應，建議先確認舒適度為主。`,null);
+    }
+  }
+
   const recHTML=recs.map(rc=>`<div class="rec-item"><div class="rec-icon" style="background:${BG[rc.st]}">${rc.ico}</div><div><div class="rec-title">${rc.title}</div><div class="rec-desc">${rc.desc}</div>${rc.act?`<div class="rec-action">→ ${rc.act}</div>`:''}</div></div>`).join('');
+
+  // ── 解鎖完整報告 CTA HTML ──
+  const unlockHTML = `
+    <div style="background:linear-gradient(135deg,#1A1A1A,#2A2A2A);border-radius:var(--r);padding:24px;margin-top:18px;color:#fff;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(244,123,0,.25),transparent);border-radius:50%"></div>
+      <div style="position:relative;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+        <div style="font-size:36px;flex-shrink:0">📋</div>
+        <div style="flex:1;min-width:240px">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--or);letter-spacing:.12em;font-weight:700;margin-bottom:6px">PROFESSIONAL REPORT</div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">解鎖完整 Fit 分析報告</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:14px">
+            由專業 Bikefitter 親自審視你的數據與照片，提供：
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:11px;color:rgba(255,255,255,.75)">
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> 完整 RoR 規格量測</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> 車架幾何分析</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> 座墊/龍頭具體調整數值</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> Cleat 位置建議</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> Pre/Post Fit 對照</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--or)">✓</span> PDF 完整報告</div>
+          </div>
+          <button id="btn-unlock" style="background:var(--or);color:#111;border:none;font-weight:800;font-size:13px;padding:11px 22px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;letter-spacing:.02em;transition:all .2s">
+            🔓 申請完整報告 <span style="font-size:14px">→</span>
+          </button>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:8px;font-family:var(--mono)">需付費 · 3-5 個工作天交付</div>
+        </div>
+      </div>
+    </div>`;
 
   const tabContent={
     angles:`<div class="agrid">${angCards}</div><div class="sum-card"><div class="sum-lbl">AI 分析摘要</div><div class="sum-txt">${r.summary_zh||'—'}</div></div>`,
-    visual:`<div class="sk-wrap"><div class="sk-bar"><span>關節標示 · BDC 照片</span><span class="sk-tag">白線骨架 · 彩色關節點</span></div><canvas id="sk-canvas"></canvas></div>
+    visual:`<div class="sk-wrap"><div class="sk-bar"><span>關節標示比較圖</span><span class="sk-tag">藍：你的姿勢 · 紅：建議調整</span></div><canvas id="sk-canvas"></canvas></div>
       <div class="sk-legend">
-        <div class="leg-item"><svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>骨架</div>
-        <div class="leg-item"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4.5" fill="#FF6B6B"/></svg>關節點</div>
+        <div class="leg-item"><svg width="22" height="9"><line x1="0" y1="4.5" x2="22" y2="4.5" stroke="white" stroke-width="2.8" stroke-linecap="round"/></svg><span style="color:var(--tx2)"><b>白線</b> = 你目前的骨架</span></div>
+        <div class="leg-item"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4.5" fill="#3896E8"/></svg><span style="color:var(--tx2)"><b>藍點</b> = 你標示的關節位置</span></div>
+        <div class="leg-item"><svg width="22" height="9"><line x1="0" y1="4.5" x2="22" y2="4.5" stroke="#50D278" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="5 3"/></svg><span style="color:var(--tx2)"><b>綠虛線</b> = 建議調整後的骨架</span></div>
+        <div class="leg-item"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4.5" fill="#E84949"/></svg><span style="color:var(--tx2)"><b>紅點</b> = 建議的關節位置</span></div>
       </div>`,
-    recs:`<div class="rec-list">${recHTML}</div>`,
+    recs:`<div class="rec-list">${recHTML}</div>${unlockHTML}`,
   };
 
   document.getElementById('v4').innerHTML=`
@@ -1025,6 +1096,7 @@ function renderV4(){
   document.getElementById('btn-new')?.addEventListener('click',resetAll);
   document.getElementById('btn-redo')?.addEventListener('click',()=>set({step:2,result:null,joints:{},tab:'angles'}));
   document.getElementById('btn-export')?.addEventListener('click',exportReport);
+  document.getElementById('btn-unlock')?.addEventListener('click',unlockFullReport);
 }
 
 // ══ IMAGE LOAD ═══════════════════════════════════════════
@@ -1114,81 +1186,405 @@ async function startAnalysis(){
 // ══ SKELETON CANVAS ══════════════════════════════════════
 function drawSkeleton(){
   const c=document.getElementById('sk-canvas');
-  if(!c||!S.bdcImg||!S.result)return;
+  if(!c||!S.result)return;
   const ctx=c.getContext('2d');
-  const IMG=S.bdcImg;
+  // 用 BDC 圖片的尺寸作為畫布比例（沒有圖就用預設）
+  const refW = S.bdcImg?.width || 600;
+  const refH = S.bdcImg?.height || 800;
   const cw=c.parentElement?.clientWidth||600;
-  const sc=cw/IMG.width;
-  c.width=Math.round(IMG.width*sc);
-  c.height=Math.round(IMG.height*sc);
+  const sc=cw/refW;
+  c.width=Math.round(refW*sc);
+  c.height=Math.round(refH*sc);
   const W=c.width,H=c.height;
 
-  ctx.drawImage(IMG,0,0,W,H);
+  // ── 1. 灰色階背景（不顯示真人照片）──
+  // 漸層灰底 + 細格線
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#3A3A3A');
+  grad.addColorStop(1, '#222222');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  // 細格線
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.restore();
+  // 地平線
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,255,.15)';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([6,4]);
+  const groundY = H * 0.92;
+  ctx.beginPath();ctx.moveTo(20,groundY);ctx.lineTo(W-20,groundY);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
 
-  // 使用使用者標示的關節點（最精確）
-  const sk=S.joints||S.result.skeleton||{};
-  const pts={};
-  for(const[n,co]of Object.entries(sk)){
-    if(co&&co.x!=null)pts[n]={x:co.x*W,y:co.y*H};
+  // ── 2. 使用者標示的關節點 ──
+  const skUser = S.joints || {};
+  const ptsUser = {};
+  for(const[n,co]of Object.entries(skUser)){
+    if(co&&co.x!=null) ptsUser[n]={x:co.x*W, y:co.y*H};
   }
 
-  const lw=Math.max(2.5,W/200);
+  // ── 3. 計算建議調整後的關節位置 ──
+  const ang = S.result.angles || {};
+  const ptsAdj = computeAdjustedJoints(ptsUser, ang, W, H);
 
-  // 白色骨架連線
-  ctx.save();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=lw;ctx.lineCap='round';
-  ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
-  [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']].forEach(([a,b])=>{
-    if(!pts[a]||!pts[b])return;
-    ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke();
-  });
-  ctx.shadowBlur=0;ctx.restore();
+  const lw = Math.max(2.5, W/200);
+  const conns = [['wrist','elbow'],['elbow','shoulder'],['shoulder','hip'],['hip','knee'],['knee','ankle'],['ankle','heel'],['ankle','foot'],['heel','foot']];
 
-  // 角度弧線 + 標籤
-  const ang=S.result.angles;
+  // ── 4. 畫建議調整後的骨架（綠線+紅點，半透明在底層）──
+  if(ptsAdj){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(80,210,120,.85)';
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.setLineDash([8, 5]);
+    ctx.shadowColor = 'rgba(80,210,120,.4)';
+    ctx.shadowBlur = 4;
+    for(const [a,b] of conns){
+      if(!ptsAdj[a]||!ptsAdj[b])continue;
+      ctx.beginPath();
+      ctx.moveTo(ptsAdj[a].x,ptsAdj[a].y);
+      ctx.lineTo(ptsAdj[b].x,ptsAdj[b].y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.shadowBlur=0;
+    // 紅色關節點（建議位置）
+    for(const k of Object.keys(ptsAdj)){
+      const p = ptsAdj[k];
+      const r = Math.max(5, W/130);
+      ctx.beginPath();ctx.arc(p.x,p.y,r+2,0,Math.PI*2);
+      ctx.fillStyle='rgba(232,73,73,.25)';ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);
+      ctx.fillStyle='#E84949';ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=1.2;ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── 5. 畫使用者標示的骨架（白線+藍點，主層在上）──
+  ctx.save();
+  ctx.strokeStyle='#FFFFFF';
+  ctx.lineWidth=lw;
+  ctx.lineCap='round';
+  ctx.shadowColor='rgba(0,0,0,.5)';
+  ctx.shadowBlur=3;
+  for(const [a,b] of conns){
+    if(!ptsUser[a]||!ptsUser[b])continue;
+    ctx.beginPath();
+    ctx.moveTo(ptsUser[a].x,ptsUser[a].y);
+    ctx.lineTo(ptsUser[b].x,ptsUser[b].y);
+    ctx.stroke();
+  }
+  ctx.shadowBlur=0;
+  ctx.restore();
+
+  // 角度弧線
   [['knee','hip','ankle','knee_extension'],['hip','shoulder','knee','hip_angle'],['shoulder','elbow','hip','shoulder_wrist'],['ankle','knee','foot','ankle_max']].forEach(([j,a,b,key])=>{
-    if(!pts[j]||!pts[a]||!pts[b])return;
+    if(!ptsUser[j]||!ptsUser[a]||!ptsUser[b])return;
     const v=ang[key];if(v==null)return;
     const t=TG[key],s=gst(v,t),col=COL[s];
-    const a1=Math.atan2(pts[a].y-pts[j].y,pts[a].x-pts[j].x);
-    const a2=Math.atan2(pts[b].y-pts[j].y,pts[b].x-pts[j].x);
+    const a1=Math.atan2(ptsUser[a].y-ptsUser[j].y,ptsUser[a].x-ptsUser[j].x);
+    const a2=Math.atan2(ptsUser[b].y-ptsUser[j].y,ptsUser[b].x-ptsUser[j].x);
     const arcR=Math.max(22,W/28);
-    ctx.save();ctx.beginPath();ctx.arc(pts[j].x,pts[j].y,arcR,a1,a2,false);ctx.strokeStyle=col;ctx.lineWidth=Math.max(2,lw*.8);ctx.setLineDash([3,2]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    ctx.save();ctx.beginPath();ctx.arc(ptsUser[j].x,ptsUser[j].y,arcR,a1,a2,false);ctx.strokeStyle=col;ctx.lineWidth=Math.max(2,lw*.8);ctx.setLineDash([3,2]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
     const ma=(a1+a2)/2,ld=arcR+Math.max(18,W/32);
-    const lx=pts[j].x+Math.cos(ma)*ld,ly=pts[j].y+Math.sin(ma)*ld,lbl=v+'°';
+    const lx=ptsUser[j].x+Math.cos(ma)*ld,ly=ptsUser[j].y+Math.sin(ma)*ld,lbl=v+'°';
     ctx.save();ctx.font=`bold ${Math.max(12,W/42)}px monospace`;
     const tw=ctx.measureText(lbl).width,pad=5,bh=Math.max(12,W/42)+8;
-    ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();
-    if(ctx.roundRect)ctx.roundRect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh,4);else ctx.rect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh);
-    ctx.fill();ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,lx,ly);ctx.restore();
+    ctx.fillStyle='rgba(0,0,0,.85)';
+    if(ctx.roundRect){ctx.beginPath();ctx.roundRect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh,4);ctx.fill();}
+    else ctx.fillRect(lx-tw/2-pad,ly-bh/2,tw+pad*2,bh);
+    ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,lx,ly);ctx.restore();
   });
 
-  // 彩色關節點（用 JOINTS 定義的顏色）
-  JOINTS.forEach((jd,i)=>{
-    const p=pts[jd.key];if(!p)return;
-    const r=Math.max(7,W/95);
+  // 藍色關節點（使用者標示）
+  for(const k of Object.keys(ptsUser)){
+    const p = ptsUser[k];
+    const r = Math.max(7, W/95);
     ctx.save();
-    ctx.beginPath();ctx.arc(p.x,p.y,r+4,0,Math.PI*2);ctx.fillStyle=jd.color+'33';ctx.fill();
-    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=jd.color;ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(9,W/70)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(i+1,p.x,p.y);
+    ctx.beginPath();ctx.arc(p.x,p.y,r+4,0,Math.PI*2);
+    ctx.fillStyle='rgba(56,150,232,.3)';ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle='#3896E8';ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.6;ctx.stroke();
     ctx.restore();
-  });
+  }
+}
+
+// ── 計算建議調整後的關節位置 ──
+function computeAdjustedJoints(ptsUser, ang, W, H){
+  if(!ptsUser || !ptsUser.hip || !ptsUser.knee) return null;
+  const adj = {};
+  // 複製原始位置
+  for(const k of Object.keys(ptsUser)){
+    adj[k] = {x: ptsUser[k].x, y: ptsUser[k].y};
+  }
+
+  // 規則：根據角度偏離目標的程度，計算建議位移
+  // 1. 膝伸展太大（座位太低）→ 髖膝整體上移；太小（座位太高）→ 整體下移
+  const ke = ang.knee_extension;
+  if(ke!=null){
+    const t = TG.knee_extension; // 25-35°
+    let dY = 0;
+    if(ke > t.max) dY = -(ke - t.max) * (H * 0.003); // 角度太大要升高座墊→關節上移
+    else if(ke < t.min) dY = (t.min - ke) * (H * 0.003);
+    // 髖、膝、踝、腳跟、腳掌都跟著動
+    ['hip','knee','ankle','heel','foot'].forEach(k=>{ if(adj[k]) adj[k].y += dY; });
+  }
+
+  // 2. 髖角閉合異常 → 上半身角度調整
+  const hip = ang.hip_angle;
+  if(hip!=null){
+    const t = TG.hip_angle;
+    let dx = 0;
+    if(hip < t.min) dx = (t.min - hip) * (W * 0.003);     // 太閉合 → 縮短龍頭，肩部往後
+    else if(hip > t.max) dx = -(hip - t.max) * (W * 0.003); // 太開 → 加長龍頭
+    ['shoulder','elbow','wrist'].forEach(k=>{ if(adj[k]) adj[k].x += dx; });
+  }
+
+  // 3. 肩腕角異常
+  const sh = ang.shoulder_wrist;
+  if(sh!=null){
+    const t = TG.shoulder_wrist;
+    let dy = 0;
+    if(sh < t.min) dy = -(t.min - sh) * (H * 0.0025); // 太低 → 把手升高
+    else if(sh > t.max) dy = (sh - t.max) * (H * 0.0025);
+    ['elbow','wrist'].forEach(k=>{ if(adj[k]) adj[k].y += dy; });
+  }
+
+  // 限制不要超出畫布
+  for(const k of Object.keys(adj)){
+    adj[k].x = Math.max(10, Math.min(W-10, adj[k].x));
+    adj[k].y = Math.max(10, Math.min(H-10, adj[k].y));
+  }
+
+  return adj;
 }
 
 // ══ EXPORT ═══════════════════════════════════════════════
 function exportReport(){
   if(!S.result)return;
   const r=S.result,a=r.angles;
-  const lines=['Orange Fruit — Free Your Fit','AI BikeFit 分析報告','═══════════════════════════════',
+  const Q=S.questionnaire||{};
+  const lines=['Orange Fruit — Free Your Fit','AI BikeFit 分析報告（簡易版）','═══════════════════════════════',
     `生成：${new Date().toLocaleString('zh-TW')}`,
-    `整體：${r.overall==='good'?'姿勢良好':r.overall==='needs_adjustment'?'需要調整':'需要改善'} · 信心度 ${r.confidence||'—'}%`,
-    '','【角度量測】',
-    ...Object.entries(a).map(([k,v])=>{const t=TG[k];if(!t||v==null)return null;return`${t.lbl}：${v}° (${t.min}-${t.max}°) ${LL[gst(v,t)]}`;}).filter(Boolean),
-    '','【AI 摘要】',r.summary_zh||'',
-    '','【建議清單】',...(r.bottom_up_issues||[]).map((s,i)=>`${i+1}. ${s}`)];
+    `整體評估：${r.overall==='good'?'姿勢良好':r.overall==='needs_adjustment'?'需要調整':'需要改善'} · 信心度 ${r.confidence||'—'}%`,
+    '',
+    '─── 騎手檔案 ───',
+    `性別 / 年齡：${Q.gender||'—'} · ${Q.age||'—'}`,
+    `身高體重：${Q.height||'—'}cm · ${Q.weight||'—'}kg`,
+    `騎車頻率：${Q.frequency||'—'}`,
+    `車款：${Q.bike_brand||'—'} ${Q.bike_model||''} ${Q.bike_size||''}`,
+    `柔軟度：${Q.flexibility||'—'}`,
+    `受傷史：${(Q.injury||[]).filter(i=>i!=='目前無受傷').join('、')||'無'}`,
+    `疼痛症狀：${(Q.pain||[]).filter(p=>p!=='目前沒有任何疼痛').join('、')||'無'}`,
+    Q.pain_other ? `其他疼痛：${Q.pain_other}` : null,
+    '',
+    '─── 角度量測 ───',
+    ...Object.entries(a).map(([k,v])=>{const t=TG[k];if(!t||v==null)return null;return`${t.lbl}：${v}° (目標 ${t.min}-${t.max}°) ${LL[gst(v,t)]}`;}).filter(Boolean),
+    '',
+    '─── AI 摘要 ───',r.summary_zh||'',
+    '',
+    '─── 建議清單 ───',...(r.bottom_up_issues||[]).map((s,i)=>`${i+1}. ${s}`),
+    '',
+    '═══════════════════════════════',
+    '⚠ 此為簡易版報告。完整 Bikefit 分析（含 RoR 規格量測、車架幾何、',
+    '具體調整數值、PDF 報告）請點擊「申請完整報告」。',
+    '',
+    'Orange Fruit — Free Your Fit',
+  ].filter(l=>l!==null);
   const bl=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
   const el=document.createElement('a');el.href=URL.createObjectURL(bl);el.download=`OrangeFruit_Fit_${Date.now()}.txt`;el.click();
+}
+
+// ══ UNLOCK FULL REPORT ════════════════════════════════════
+// ⚙ 設定區：把 GAS_URL 改成你的 Google Apps Script 部署網址
+const GAS_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+function unlockFullReport(){
+  if(!S.result){alert('請先完成分析');return;}
+  if(!S.bdcURL && !S.tdcURL){alert('需要至少一張照片');return;}
+
+  // 建立 Modal
+  const ov = document.createElement('div');
+  ov.id = 'unlock-modal';
+  ov.innerHTML = `
+    <style>
+      @keyframes uFadeIn{from{opacity:0}to{opacity:1}}
+      @keyframes uSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+      #unlock-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:uFadeIn .25s ease;overflow-y:auto}
+      .um-card{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:uSlideUp .3s ease;font-family:var(--font)}
+      .um-head{background:linear-gradient(135deg,#1A1A1A,#2A2A2A);padding:22px 24px;color:#fff;position:relative;border-radius:16px 16px 0 0}
+      .um-tag{font-size:11px;font-family:var(--mono);color:#F47B00;letter-spacing:.12em;font-weight:700;margin-bottom:6px}
+      .um-title{font-size:19px;font-weight:800;letter-spacing:-.02em}
+      .um-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+      .um-close:hover{background:rgba(255,255,255,.2)}
+      .um-body{padding:22px 24px}
+      .um-info{background:#FFF3E0;border-left:4px solid #F47B00;padding:12px 14px;border-radius:0 8px 8px 0;font-size:12px;color:#7A4500;margin-bottom:18px;line-height:1.7}
+      .um-field{margin-bottom:14px}
+      .um-label{font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+      .um-req{color:#C0231A;font-size:11px}
+      .um-input{width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;background:#fff;color:#1A1A1A;outline:none;transition:all .15s}
+      .um-input:focus{border-color:#F47B00;box-shadow:0 0 0 3px rgba(244,123,0,.15)}
+      .um-input::placeholder{color:#C0C0C0}
+      .um-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .um-foot{padding:16px 24px;border-top:1px solid #EBEBEB;background:#F9F9F8;display:flex;gap:10px;align-items:center;border-radius:0 0 16px 16px}
+      .um-cancel{flex:1;padding:12px;font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid #D8D8D8;background:#fff;color:#888;border-radius:10px;cursor:pointer;transition:all .15s}
+      .um-cancel:hover{color:#1A1A1A;border-color:#888}
+      .um-submit{flex:2;padding:12px 22px;font-family:var(--font);font-size:14px;font-weight:800;border:2.5px solid #F47B00;background:#111;color:#F47B00;border-radius:11px;cursor:pointer;transition:all .2s;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+      .um-submit:hover:not(:disabled){background:#000;color:#FFB347;border-color:#FFB347;transform:translateY(-1px)}
+      .um-submit:disabled{background:#2A2A2A;border-color:#444;color:#555;cursor:wait}
+      .um-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(244,123,0,.3);border-top-color:#F47B00;border-radius:50%;animation:spin 0.7s linear infinite}
+      .um-success{text-align:center;padding:30px 24px}
+      .um-suc-icon{font-size:54px;margin-bottom:14px}
+      .um-suc-title{font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.02em}
+      .um-suc-sub{font-size:13px;color:#666;line-height:1.7;margin-bottom:18px}
+      .um-suc-id{font-family:var(--mono);font-size:12px;background:#F9F9F8;padding:10px 14px;border-radius:8px;color:#666;margin-bottom:18px;border:1px solid #E8E8E8}
+    </style>
+    <div class="um-card" id="um-card">
+      <div class="um-head">
+        <button class="um-close" id="um-close">✕</button>
+        <div class="um-tag">PROFESSIONAL REPORT</div>
+        <div class="um-title">🔓 申請完整 BikeFit 報告</div>
+      </div>
+      <div class="um-body" id="um-body">
+        <div class="um-info">
+          📋 完整報告由專業 Bikefitter 親自審視，內含 RoR 規格量測、車架幾何、調整數值、Cleat 建議、PDF 報告等。預計 3-5 個工作天交付至您的 Email。
+        </div>
+        <div class="um-field">
+          <div class="um-label">姓名 <span class="um-req">*</span></div>
+          <input class="um-input" type="text" id="um-name" placeholder="請輸入姓名" autocomplete="name">
+        </div>
+        <div class="um-field">
+          <div class="um-label">Email <span class="um-req">*</span></div>
+          <input class="um-input" type="email" id="um-email" placeholder="example@email.com" autocomplete="email">
+        </div>
+        <div class="um-row">
+          <div class="um-field">
+            <div class="um-label">電話 <span class="um-req">*</span></div>
+            <input class="um-input" type="tel" id="um-phone" placeholder="0912-345-678" autocomplete="tel">
+          </div>
+          <div class="um-field">
+            <div class="um-label">LINE ID</div>
+            <input class="um-input" type="text" id="um-line" placeholder="（選填）">
+          </div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.6">
+          💚 您的資料僅用於本次 BikeFit 報告交付，不會用於其他用途。
+        </div>
+      </div>
+      <div class="um-foot">
+        <button class="um-cancel" id="um-cancel">取消</button>
+        <button class="um-submit" id="um-submit">送出申請 <span style="font-size:15px">→</span></button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+
+  // 自動帶入問卷已有的資料 (如果有)
+  const Q = S.questionnaire || {};
+
+  // 事件
+  function closeModal(){
+    ov.remove();
+    document.body.style.overflow = '';
+  }
+  document.getElementById('um-close').onclick = closeModal;
+  document.getElementById('um-cancel').onclick = closeModal;
+  ov.onclick = (e) => { if(e.target === ov) closeModal(); };
+
+  document.getElementById('um-submit').onclick = async () => {
+    const name = document.getElementById('um-name').value.trim();
+    const email = document.getElementById('um-email').value.trim();
+    const phone = document.getElementById('um-phone').value.trim();
+    const line_id = document.getElementById('um-line').value.trim();
+
+    // 驗證
+    if(!name) return alert('請輸入姓名');
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('請輸入有效 Email');
+    if(!phone) return alert('請輸入電話');
+
+    const submitBtn = document.getElementById('um-submit');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="um-spinner"></span> 傳送中…';
+
+    try {
+      // 檢查 GAS_URL 是否已設定
+      if(GAS_URL === 'YOUR_APPS_SCRIPT_URL_HERE' || !GAS_URL.startsWith('http')){
+        // 開發模式：顯示資料但不寄送
+        const data = buildFullReportPayload({name,email,phone,line_id});
+        console.log('=== 申請資料（開發模式，未寄送）===');
+        console.log(data);
+        showSuccessUI(name, email, 'DEV-' + Date.now(), true);
+        return;
+      }
+
+      const payload = buildFullReportPayload({name,email,phone,line_id});
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',  // GAS 不支援 CORS preflight
+        headers: { 'Content-Type': 'text/plain' },  // 用 text/plain 避免 preflight
+        body: JSON.stringify(payload),
+      });
+
+      // no-cors 模式下無法讀取回應，但只要請求送出成功就視為成功
+      const requestId = 'OF' + Date.now();
+      showSuccessUI(name, email, requestId, false);
+
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '送出申請 <span style="font-size:15px">→</span>';
+      alert('送出失敗：' + err.message + '\n\n請稍後再試或直接聯絡 orange.fruit.co@gmail.com');
+    }
+  };
+}
+
+function buildFullReportPayload(contact){
+  const Q = S.questionnaire || {};
+  const r = S.result || {};
+  return {
+    contact: contact,
+    questionnaire: Q,
+    angles: r.angles || {},
+    overall: r.overall,
+    confidence: r.confidence,
+    summary_zh: r.summary_zh,
+    bottom_up_issues: r.bottom_up_issues || [],
+    joints: S.joints || {},
+    bdc_image: S.bdcURL || '',
+    tdc_image: S.tdcURL || '',
+  };
+}
+
+function showSuccessUI(name, email, requestId, isDevMode){
+  const body = document.getElementById('um-body');
+  const foot = document.querySelector('.um-foot');
+  body.innerHTML = `
+    <div class="um-success">
+      <div class="um-suc-icon">${isDevMode?'⚠️':'✅'}</div>
+      <div class="um-suc-title">${isDevMode?'開發模式':'申請已送出！'}</div>
+      <div class="um-suc-sub">
+        ${isDevMode
+          ? '尚未設定 Apps Script URL，資料已輸出至瀏覽器 Console（F12 查看）。<br>實際運行時，資料會自動寄送至 Bikefitter。'
+          : `${name}，您的申請已成功送出。<br>確認信已寄至 <b>${email}</b>，請查收。`}
+      </div>
+      <div class="um-suc-id">Request ID：${requestId}</div>
+      <div style="font-size:12px;color:#888">
+        ${isDevMode?'':'我們將在 3-5 個工作天內準備您的完整報告。'}
+      </div>
+    </div>
+  `;
+  foot.innerHTML = `<button class="um-cancel" id="um-done" style="flex:1">關閉</button>`;
+  document.getElementById('um-done').onclick = () => {
+    document.getElementById('unlock-modal').remove();
+    document.body.style.overflow = '';
+  };
 }
 
 // ══ RESET ════════════════════════════════════════════════
