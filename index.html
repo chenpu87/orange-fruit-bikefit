@@ -343,7 +343,7 @@ body.in-quest .page{padding-top:0}
       <div class="nav-tag">Free Your Fit</div>
     </div>
   </div>
-  <div class="nav-chip">BOTTOM-UP AI FIT</div>
+  <div id="nav-right" class="nav-chip">BOTTOM-UP AI FIT</div>
 </nav>
 
 <div id="alps-hero" style="display:none;text-align:center;padding:36px 20px 20px;color:#fff">
@@ -362,7 +362,7 @@ body.in-quest .page{padding-top:0}
 <div class="page" id="page">
   <div class="stepbar" id="stepbar"></div>
   <div class="err-box" id="err-box"></div>
-  <div id="v0"></div>
+  <div id="v-auth"></div>
   <div id="v0"></div>
   <div id="v1" style="display:none"></div>
   <div id="v2" style="display:none"></div>
@@ -401,10 +401,11 @@ const JOINTS = [
 ];
 
 // ── 車輛標示點（用於計算實體尺寸 mm）──
+// 標示順序：BB → 座墊中心 → 把手中心 → Hood
 const BIKE_POINTS = [
-  {key:'bb',          lbl:'BB（五通）',      color:'#FF8800', desc:'曲柄旋轉軸心（齒盤中央，藍膠帶 ③）'},
-  {key:'saddle_nose', lbl:'座墊中心點',      color:'#FF8800', desc:'座墊上方藍膠帶 ① 位置'},
-  {key:'hb_center',   lbl:'把手中心',        color:'#FF8800', desc:'把手橫向中心，藍膠帶 ② 位置'},
+  {key:'bb',          lbl:'BB（五通）',      color:'#FF8800', desc:'曲柄旋轉軸心（齒盤中央，藍膠帶 ① 位置）'},
+  {key:'saddle_nose', lbl:'座墊中心點',      color:'#FF8800', desc:'座墊上方藍膠帶 ② 位置'},
+  {key:'hb_center',   lbl:'把手中心 CC',     color:'#FF8800', desc:'把手橫向中心（Center to Center），藍膠帶 ③ 位置'},
   {key:'hood',        lbl:'變把握位 Hood',   color:'#FF8800', desc:'實際騎乘握把處，藍膠帶 ④ 位置'},
 ];
 
@@ -452,6 +453,12 @@ const FLEX_OPTS   = [
 ];
 
 const S = {
+  // ── 認證 ──
+  user: null,         // {name, email, line_id, token} 從 localStorage 還原
+  authMode: 'login',  // 'login' | 'register'
+  authBusy: false,
+  authError: '',
+  // ── 主流程 ──
   step:0,  // 0=問卷, 1=上傳, 2=標關節, 2.5=標車輛, 3=AI分析, 4=報告
   qstep:1, // 問卷子步驟 1-6
   markStage:'joints', // 'joints' | 'bike' — Step 2 內的子階段
@@ -474,6 +481,16 @@ const S = {
   pct:0, logs:[],
 };
 
+// 啟動時從 localStorage 載入使用者
+try {
+  const stored = localStorage.getItem('of_user');
+  if(stored){
+    S.user = JSON.parse(stored);
+    // 自動帶入問卷聯絡資料
+    if(S.user.email) S.questionnaire = {...S.questionnaire};
+  }
+} catch(e){ console.warn('Load user failed', e); }
+
 function set(p){Object.assign(S,p);render();postRender();}
 function postRender(){
   if(S.step===2)setTimeout(initJointCanvas,80);
@@ -482,6 +499,39 @@ function postRender(){
 
 // ══ RENDER ═══════════════════════════════════════════════
 function render(){
+  // 更新 navbar 顯示
+  const navR = document.getElementById('nav-right');
+  if(navR){
+    if(S.user){
+      navR.innerHTML = `<span style="font-size:10px;color:rgba(255,255,255,.5);font-family:var(--mono);margin-right:10px">${S.user.name||S.user.email}</span><button onclick="logout()" style="background:transparent;border:1px solid rgba(244,123,0,.6);color:#F47B00;font-size:10px;font-weight:700;padding:5px 11px;border-radius:14px;cursor:pointer;font-family:var(--font);letter-spacing:.05em">登出</button>`;
+      navR.style.background = 'transparent';
+      navR.style.border = 'none';
+      navR.style.padding = '0';
+    } else {
+      navR.innerHTML = 'BOTTOM-UP AI FIT';
+      navR.style.background = '';
+      navR.style.border = '';
+      navR.style.padding = '';
+    }
+  }
+  // 未登入 → 顯示登入畫面，隱藏其他
+  if(!S.user){
+    document.body.classList.add('in-quest');
+    document.getElementById('v-auth').style.display = '';
+    document.getElementById('v0').style.display = 'none';
+    document.getElementById('v1').style.display = 'none';
+    document.getElementById('v2').style.display = 'none';
+    document.getElementById('v3').style.display = 'none';
+    document.getElementById('v4').style.display = 'none';
+    document.getElementById('stepbar').innerHTML = '';
+    document.getElementById('err-box').innerHTML = '';
+    renderAuth();
+    return;
+  }
+  // 已登入 → 隱藏登入頁，顯示主流程
+  document.getElementById('v-auth').style.display = 'none';
+  // 主流程繼續
+  if(S.step===0){document.body.classList.add('in-quest');}else{document.body.classList.remove('in-quest');}
   renderStepbar();
   renderErr();
   document.getElementById('v0').style.display=S.step===0?'':'none';
@@ -495,6 +545,159 @@ function render(){
   if(S.step===3)renderV3();
   if(S.step===4)renderV4();
 }
+
+// ══ AUTH SCREEN ══════════════════════════════════════════
+function renderAuth(){
+  const isReg = S.authMode === 'register';
+  const va = document.getElementById('v-auth');
+  va.innerHTML = `
+    <div style="max-width:520px;margin:0 auto;padding:36px 18px 60px;color:#fff">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:rgba(244,123,0,.95);text-shadow:0 2px 12px rgba(0,0,0,.6);margin-bottom:10px">🍊 ORANGE FRUIT BIKEFIT</div>
+        <div style="font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.15;text-shadow:0 2px 20px rgba(0,0,0,.5);margin-bottom:8px">
+          ${isReg ? `<span>建立 <span style="color:var(--or)">Beta</span> 帳號</span>` : `歡迎回來`}
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);text-shadow:0 1px 8px rgba(0,0,0,.5);max-width:420px;margin:0 auto;line-height:1.65">
+          ${isReg ? '加入 Beta 測試名單（限額 50 位 · 邀請制），協助我們打磨產品。' : '輸入 Email 進入 Smart BikeFit 分析。'}
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-radius:18px;box-shadow:0 12px 50px rgba(0,0,0,.45);overflow:hidden">
+        <!-- 切換 Tab -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;background:#F4F4F0;padding:6px;gap:4px;margin:14px 14px 0;border-radius:11px">
+          <button data-auth-tab="login"  style="padding:10px;font-family:var(--font);font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer;background:${!isReg?'#fff':'transparent'};color:${!isReg?'#1A1A1A':'#888'};box-shadow:${!isReg?'0 2px 8px rgba(0,0,0,.08)':'none'};transition:all .15s">
+            登入
+          </button>
+          <button data-auth-tab="register" style="padding:10px;font-family:var(--font);font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer;background:${isReg?'#fff':'transparent'};color:${isReg?'#1A1A1A':'#888'};box-shadow:${isReg?'0 2px 8px rgba(0,0,0,.08)':'none'};transition:all .15s">
+            註冊
+          </button>
+        </div>
+
+        <div style="padding:22px 24px 18px">
+          ${isReg ? `
+            <!-- 註冊表單 -->
+            <div style="background:linear-gradient(135deg,#FFF3E0,#FFE8C5);border:1px solid #F5C87A;border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:11px;color:#7A4500;line-height:1.6">
+              ⚠️ <b>限額 50 位 · 邀請制</b><br>請輸入 Bikefitter 提供的邀請碼以註冊
+            </div>
+            <div style="margin-bottom:13px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">姓名 <span style="color:#C0231A">*</span></div>
+              <input id="auth-name" type="text" placeholder="請輸入你的姓名" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;outline:none;color:#1A1A1A">
+            </div>
+            <div style="margin-bottom:13px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">Email <span style="color:#C0231A">*</span></div>
+              <input id="auth-email" type="email" placeholder="example@gmail.com" autocomplete="email" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;outline:none;color:#1A1A1A">
+            </div>
+            <div style="margin-bottom:13px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">電話</div>
+              <input id="auth-phone" type="tel" placeholder="0912-345-678（選填）" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;outline:none;color:#1A1A1A">
+            </div>
+            <div style="margin-bottom:13px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">LINE ID</div>
+              <input id="auth-line" type="text" placeholder="（選填）" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;outline:none;color:#1A1A1A">
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">邀請碼 <span style="color:#C0231A">*</span></div>
+              <input id="auth-code" type="text" placeholder="請輸入邀請碼" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #F5C87A;border-radius:9px;outline:none;color:#1A1A1A;background:#FFFEF8;letter-spacing:.05em">
+            </div>
+          ` : `
+            <!-- 登入表單 -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">Email <span style="color:#C0231A">*</span></div>
+              <input id="auth-email" type="email" placeholder="輸入註冊時的 Email" autocomplete="email" style="width:100%;padding:11px 13px;font-family:var(--font);font-size:14px;border:1.5px solid #E8E8E8;border-radius:9px;outline:none;color:#1A1A1A">
+            </div>
+            <div style="font-size:11px;color:#888;margin-bottom:14px;line-height:1.6">
+              💡 還沒有帳號？點上方「註冊」分頁建立帳號（需邀請碼）
+            </div>
+          `}
+
+          ${S.authError ? `<div style="background:#FFEBEB;border-left:3px solid #C0231A;padding:9px 12px;border-radius:0 8px 8px 0;font-size:12px;color:#8C2D2D;margin-bottom:13px">${S.authError}</div>` : ''}
+
+          <button id="auth-submit" ${S.authBusy?'disabled':''} style="width:100%;padding:13px;font-family:var(--font);font-size:14px;font-weight:800;background:${S.authBusy?'#888':'#111'};color:${S.authBusy?'#ccc':'#F47B00'};border:2.5px solid ${S.authBusy?'#888':'#F47B00'};border-radius:11px;cursor:${S.authBusy?'wait':'pointer'};letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s">
+            ${S.authBusy ? '<span class="um-spinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(244,123,0,.3);border-top-color:#F47B00;border-radius:50%;animation:spin 0.7s linear infinite"></span> 處理中…' : (isReg ? '建立帳號 →' : '登入 →')}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 綁定事件
+  document.querySelectorAll('[data-auth-tab]').forEach(b => b.addEventListener('click',()=>{
+    set({authMode: b.dataset.authTab, authError:''});
+  }));
+  document.getElementById('auth-submit').addEventListener('click', submitAuth);
+  // Enter 送出
+  ['auth-email','auth-name','auth-phone','auth-line','auth-code'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') submitAuth(); });
+  });
+}
+
+async function submitAuth(){
+  if(S.authBusy) return;
+  const email = document.getElementById('auth-email')?.value.trim();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    set({authError:'請輸入有效 Email'});
+    return;
+  }
+
+  if(S.authMode === 'register'){
+    const name = document.getElementById('auth-name')?.value.trim();
+    const phone = document.getElementById('auth-phone')?.value.trim();
+    const line_id = document.getElementById('auth-line')?.value.trim();
+    const code = document.getElementById('auth-code')?.value.trim();
+    if(!name) return set({authError:'請輸入姓名'});
+    if(!code) return set({authError:'請輸入邀請碼'});
+
+    set({authBusy:true, authError:''});
+    try {
+      const result = await callAuth({action:'register', name, email, phone, line_id, invite_code:code});
+      if(!result.ok){
+        set({authBusy:false, authError: result.error || '註冊失敗'});
+        return;
+      }
+      // 註冊成功 → 自動登入
+      const user = {name, email, phone, line_id, token: result.token || email};
+      localStorage.setItem('of_user', JSON.stringify(user));
+      set({user, authBusy:false, authError:''});
+    } catch(err){
+      set({authBusy:false, authError:'網路錯誤：'+err.message});
+    }
+  } else {
+    // 登入
+    set({authBusy:true, authError:''});
+    try {
+      const result = await callAuth({action:'login', email});
+      if(!result.ok){
+        set({authBusy:false, authError: result.error || '登入失敗'});
+        return;
+      }
+      const user = {name: result.name, email, phone: result.phone, line_id: result.line_id, token: result.token || email};
+      localStorage.setItem('of_user', JSON.stringify(user));
+      set({user, authBusy:false, authError:''});
+    } catch(err){
+      set({authBusy:false, authError:'網路錯誤：'+err.message});
+    }
+  }
+}
+
+async function callAuth(payload){
+  // 暫時實作：呼叫 GAS（會發 POST 但 GAS 用 no-cors，無法讀取回應）
+  // 解法：改用 GET 讓 GAS 直接回 JSON
+  const url = GAS_URL + '?' + new URLSearchParams(payload).toString();
+  try {
+    const r = await fetch(url, {method:'GET'});
+    const txt = await r.text();
+    try { return JSON.parse(txt); } catch(e){ return {ok:false, error:'回應格式錯誤'}; }
+  } catch(err){
+    throw err;
+  }
+}
+
+function logout(){
+  localStorage.removeItem('of_user');
+  set({user:null, authMode:'login', authError:''});
+}
+
 
 function renderStepbar(){
   if(S.step===0){document.getElementById('stepbar').innerHTML='';return;}
@@ -886,13 +1089,17 @@ function renderV1(){
               <circle cx="60" cy="75" r="5" fill="none" stroke="#5A6F8F" stroke-width="1.5"/>
               <line x1="60" y1="75" x2="58" y2="65" stroke="#5A6F8F" stroke-width="2"/>
               <line x1="60" y1="75" x2="62" y2="85" stroke="#5A6F8F" stroke-width="2"/>
-              <!-- 4 個藍膠帶標記 -->
-              <circle cx="50" cy="28" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
-              <text x="50" y="30" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">1</text>
-              <circle cx="93" cy="34" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
-              <text x="93" y="36" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">2</text>
+              <!-- 4 個藍膠帶標記（順序：BB → 座墊 → 把手中心 → Hood）-->
+              <!-- ① BB 五通 -->
               <circle cx="60" cy="75" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
-              <text x="60" y="77" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">3</text>
+              <text x="60" y="77" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">1</text>
+              <!-- ② 座墊中心 -->
+              <circle cx="50" cy="28" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="50" y="30" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">2</text>
+              <!-- ③ 把手中心 CC -->
+              <circle cx="93" cy="34" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="93" y="36" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">3</text>
+              <!-- ④ Hood -->
               <circle cx="98" cy="38" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
               <text x="98" y="40" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">4</text>
               <text x="60" y="98" text-anchor="middle" font-size="7" fill="#3896E8" font-weight="bold" font-family="monospace">無人</text>
@@ -917,9 +1124,9 @@ function renderV1(){
           為了讓系統算出更準確的座墊高度、Reach 等數據，請在<b>單車上貼上 4 個藍色紙膠帶標記</b>，再拍照：
         </div>
         <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid #F5C87A;font-size:11px;color:#1A1A1A;line-height:1.9">
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">①</span><span><b>座墊中心點</b>：以座墊寬度量測，從鼻端往後量，貼在中心線</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">②</span><span><b>把手中心點</b>：把手橫向最高點/變把握位處</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">③</span><span><b>五通 BB 中心</b>：曲柄旋轉軸心位置（齒盤中央）</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">①</span><span><b>五通 BB 中心</b>：曲柄旋轉軸心位置（齒盤中央）</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">②</span><span><b>座墊中心點</b>：以座墊寬度量測（70mm 為中心點），從鼻端往後量，貼在中心線</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">③</span><span><b>把手中心 CC</b>：把手橫向中心（Center to Center）</span></div>
           <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#3896E8;font-weight:700;flex-shrink:0">④</span><span><b>變把握位（Hood）</b>：實際騎乘時手腕握住的位置</span></div>
         </div>
         <div style="font-size:10px;color:#7A4500;margin-top:8px;font-style:italic">💡 沒貼也可以使用，但精準度會降低。完整報告需要這些標記。</div>
@@ -1997,20 +2204,20 @@ function unlockFullReport(){
         </div>
         <div class="um-field">
           <div class="um-label">姓名 <span class="um-req">*</span></div>
-          <input class="um-input" type="text" id="um-name" placeholder="請輸入姓名" autocomplete="name">
+          <input class="um-input" type="text" id="um-name" placeholder="請輸入姓名" autocomplete="name" value="${(S.user&&S.user.name)||''}">
         </div>
         <div class="um-field">
           <div class="um-label">Email <span class="um-req">*</span></div>
-          <input class="um-input" type="email" id="um-email" placeholder="example@email.com" autocomplete="email">
+          <input class="um-input" type="email" id="um-email" placeholder="example@email.com" autocomplete="email" value="${(S.user&&S.user.email)||''}">
         </div>
         <div class="um-row">
           <div class="um-field">
             <div class="um-label">電話 <span class="um-req">*</span></div>
-            <input class="um-input" type="tel" id="um-phone" placeholder="0912-345-678" autocomplete="tel">
+            <input class="um-input" type="tel" id="um-phone" placeholder="0912-345-678" autocomplete="tel" value="${(S.user&&S.user.phone)||''}">
           </div>
           <div class="um-field">
             <div class="um-label">LINE ID</div>
-            <input class="um-input" type="text" id="um-line" placeholder="（選填）">
+            <input class="um-input" type="text" id="um-line" placeholder="（選填）" value="${(S.user&&S.user.line_id)||''}">
           </div>
         </div>
         <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.6">
