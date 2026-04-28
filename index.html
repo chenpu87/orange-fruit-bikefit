@@ -118,8 +118,8 @@ button:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
 .joint-wrap.done-marking{cursor:default}
 #joint-canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 #joint-img{width:100%;display:block;max-height:520px;object-fit:contain}
-.joint-status{padding:13px 18px;background:var(--sur2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
-.joint-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.joint-status{padding:18px 20px;background:var(--sur2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px}
+.joint-dot{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .joint-tag-row{padding:10px 18px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--bd)}
 .jtag{display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;transition:all .2s}
 
@@ -802,6 +802,111 @@ function renderV1(){
           <div class="instr-step"><div class="instr-num">2</div><div>在照片上依序點擊 8 個關節點（系統會引導你）</div></div>
           <div class="instr-step"><div class="instr-num">3</div><div>AI 根據你標示的精確位置計算角度並生成報告</div></div>
         </div>
+        <div style="background:#F0F8FF;border-left:3px solid #3896E8;padding:8px 12px;margin-top:10px;border-radius:0 6px 6px 0;font-size:11px;color:#1F3D77;line-height:1.6">
+          📦 <b>檔案限制：</b>每張照片建議 10MB 以下（系統會自動壓縮至 1.5MB），支援 JPG / PNG / HEIC 格式
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#F0F8FF,#E5F1FF);border:1.5px solid #8AA9DD;border-radius:12px;padding:16px 18px;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:800;color:#1F3D77;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          📷 拍攝角度示範
+        </div>
+        <div style="font-size:12px;color:#1F3D77;line-height:1.7;margin-bottom:14px">
+          請從<b>傳動側（齒盤側）正側面</b>拍攝，相機與 BB（五通）等高、距離 2-3 公尺、車架水平。
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <!-- BDC 示範 -->
+          <div style="background:#fff;border-radius:8px;border:1px solid #C0CEEB;overflow:hidden">
+            <div style="background:#1F3D77;color:#fff;font-size:10px;font-weight:700;padding:5px 8px;text-align:center;letter-spacing:.05em">BDC（下死點）</div>
+            <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#F8FAFE">
+              <!-- 車架輪廓 -->
+              <circle cx="30" cy="75" r="18" fill="none" stroke="#9AABC4" stroke-width="1.5"/>
+              <circle cx="90" cy="75" r="18" fill="none" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="60" y1="75" x2="80" y2="50" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="60" y1="75" x2="40" y2="50" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="80" y1="50" x2="92" y2="35" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="40" y1="50" x2="50" y2="30" stroke="#9AABC4" stroke-width="1.5"/>
+              <!-- 座墊 -->
+              <ellipse cx="50" cy="28" rx="9" ry="3" fill="#5A6F8F"/>
+              <!-- 把手 -->
+              <path d="M 88,33 L 95,32 L 99,38" fill="none" stroke="#5A6F8F" stroke-width="2"/>
+              <!-- 騎手簡化（粉紅） -->
+              <circle cx="62" cy="20" r="5" fill="#FFB3BA"/>
+              <path d="M 62,25 L 56,40 L 50,45 L 80,42" fill="none" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <line x1="56" y1="40" x2="62" y2="55" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <!-- 腳：BDC 在最低點 -->
+              <line x1="62" y1="55" x2="60" y2="78" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <line x1="60" y1="78" x2="68" y2="82" stroke="#FF8FA0" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- 曲柄朝下 -->
+              <line x1="60" y1="75" x2="60" y2="85" stroke="#FF6B00" stroke-width="2.5"/>
+              <circle cx="60" cy="85" r="3" fill="#FF6B00"/>
+              <!-- 標註 -->
+              <text x="60" y="98" text-anchor="middle" font-size="7" fill="#FF6B00" font-weight="bold" font-family="monospace">6 點鐘</text>
+            </svg>
+            <div style="padding:6px 8px;font-size:10px;color:#1F3D77;text-align:center;line-height:1.4">曲柄垂直向下<br>腳伸到最低</div>
+          </div>
+          <!-- TDC 示範 -->
+          <div style="background:#fff;border-radius:8px;border:1px solid #C0CEEB;overflow:hidden">
+            <div style="background:#1F3D77;color:#fff;font-size:10px;font-weight:700;padding:5px 8px;text-align:center;letter-spacing:.05em">TDC（上死點）</div>
+            <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#F8FAFE">
+              <circle cx="30" cy="75" r="18" fill="none" stroke="#9AABC4" stroke-width="1.5"/>
+              <circle cx="90" cy="75" r="18" fill="none" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="60" y1="75" x2="80" y2="50" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="60" y1="75" x2="40" y2="50" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="80" y1="50" x2="92" y2="35" stroke="#9AABC4" stroke-width="1.5"/>
+              <line x1="40" y1="50" x2="50" y2="30" stroke="#9AABC4" stroke-width="1.5"/>
+              <ellipse cx="50" cy="28" rx="9" ry="3" fill="#5A6F8F"/>
+              <path d="M 88,33 L 95,32 L 99,38" fill="none" stroke="#5A6F8F" stroke-width="2"/>
+              <circle cx="62" cy="20" r="5" fill="#FFB3BA"/>
+              <path d="M 62,25 L 56,40 L 50,45 L 80,42" fill="none" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <line x1="56" y1="40" x2="62" y2="55" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <!-- 腳：TDC 上抬，膝彎 -->
+              <line x1="62" y1="55" x2="68" y2="63" stroke="#FF8FA0" stroke-width="3" stroke-linecap="round"/>
+              <line x1="68" y1="63" x2="72" y2="73" stroke="#FF8FA0" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- 曲柄 1 點鐘方向 -->
+              <line x1="60" y1="75" x2="68" y2="68" stroke="#FF6B00" stroke-width="2.5"/>
+              <circle cx="68" cy="68" r="3" fill="#FF6B00"/>
+              <text x="60" y="98" text-anchor="middle" font-size="7" fill="#FF6B00" font-weight="bold" font-family="monospace">1 點鐘</text>
+            </svg>
+            <div style="padding:6px 8px;font-size:10px;color:#1F3D77;text-align:center;line-height:1.4">曲柄朝前上方<br>膝蓋彎曲最大</div>
+          </div>
+          <!-- 空車示範 -->
+          <div style="background:#fff;border-radius:8px;border:1px solid #C0CEEB;overflow:hidden">
+            <div style="background:#1F3D77;color:#fff;font-size:10px;font-weight:700;padding:5px 8px;text-align:center;letter-spacing:.05em">空車（傳動側）</div>
+            <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#F8FAFE">
+              <circle cx="30" cy="75" r="18" fill="none" stroke="#5A6F8F" stroke-width="1.8"/>
+              <circle cx="90" cy="75" r="18" fill="none" stroke="#5A6F8F" stroke-width="1.8"/>
+              <line x1="60" y1="75" x2="80" y2="50" stroke="#5A6F8F" stroke-width="1.8"/>
+              <line x1="60" y1="75" x2="40" y2="50" stroke="#5A6F8F" stroke-width="1.8"/>
+              <line x1="80" y1="50" x2="92" y2="35" stroke="#5A6F8F" stroke-width="1.8"/>
+              <line x1="40" y1="50" x2="50" y2="30" stroke="#5A6F8F" stroke-width="1.8"/>
+              <ellipse cx="50" cy="28" rx="9" ry="3" fill="#5A6F8F"/>
+              <path d="M 88,33 L 95,32 L 99,38" fill="none" stroke="#5A6F8F" stroke-width="2.5"/>
+              <!-- 齒盤 -->
+              <circle cx="60" cy="75" r="5" fill="none" stroke="#5A6F8F" stroke-width="1.5"/>
+              <line x1="60" y1="75" x2="58" y2="65" stroke="#5A6F8F" stroke-width="2"/>
+              <line x1="60" y1="75" x2="62" y2="85" stroke="#5A6F8F" stroke-width="2"/>
+              <!-- 4 個藍膠帶標記 -->
+              <circle cx="50" cy="28" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="50" y="30" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">1</text>
+              <circle cx="93" cy="34" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="93" y="36" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">2</text>
+              <circle cx="60" cy="75" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="60" y="77" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">3</text>
+              <circle cx="98" cy="38" r="3.5" fill="#3896E8" stroke="#fff" stroke-width="1"/>
+              <text x="98" y="40" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">4</text>
+              <text x="60" y="98" text-anchor="middle" font-size="7" fill="#3896E8" font-weight="bold" font-family="monospace">無人</text>
+            </svg>
+            <div style="padding:6px 8px;font-size:10px;color:#1F3D77;text-align:center;line-height:1.4">齒盤側拍攝<br>看到 4 個藍標記</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid #C0CEEB;margin-top:12px;font-size:11px;color:#1F3D77;line-height:1.7">
+          <div style="font-weight:700;margin-bottom:4px">📐 拍攝注意事項：</div>
+          <div>✓ 從正側面（不要斜角）</div>
+          <div>✓ 整輛車入鏡，包含上下輪</div>
+          <div>✓ 相機鏡頭與 BB 等高（避免俯拍/仰拍）</div>
+          <div>✓ 距離 2-3 公尺（避免廣角畸變）</div>
+        </div>
       </div>
 
       <div style="background:linear-gradient(135deg,#FFF8E8,#FFF3D6);border:1.5px solid #F5C87A;border-radius:12px;padding:14px 16px;margin-bottom:14px">
@@ -892,10 +997,10 @@ function renderV2Joints(){
     </div>
     <div class="joint-status">
       ${allDone
-        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 所有關節點已標示完成！下一步：標示車輛重點</div>`
+        ?`<div style="color:var(--ok);font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px">✅ 所有關節點已標示完成！下一步：標示車輛重點</div>`
         :`<div class="joint-dot" style="background:${cur.color}">${done+1}</div>
-          <div><div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${cur.lbl}</span></div>
-          <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
+          <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.3">請點擊：<span style="color:var(--or);font-size:22px">${cur.lbl}</span></div>
+          <div style="font-size:14px;color:var(--tx2);margin-top:6px;line-height:1.55">${cur.desc}</div></div>`}
     </div>
     <div class="joint-wrap${allDone?' done-marking':''}" id="joint-wrap">
       <img id="joint-img" src="${S.bdcURL||S.tdcURL}" style="width:100%;display:block;max-height:540px;object-fit:contain">
@@ -965,10 +1070,10 @@ function renderV2Bike(){
       </div>` : ''}
     <div class="joint-status">
       ${allDone
-        ?`<div style="color:var(--ok);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">✅ 車輛標示完成！請選擇曲柄長度後開始分析</div>`
+        ?`<div style="color:var(--ok);font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px">✅ 車輛標示完成！請選擇曲柄長度後開始分析</div>`
         :`<div class="joint-dot" style="background:${cur.color}">${done+1}</div>
-          <div><div style="font-size:14px;font-weight:700">請點擊：<span style="color:var(--or)">${cur.lbl}</span></div>
-          <div style="font-size:12px;color:var(--tx3);margin-top:2px">${cur.desc}</div></div>`}
+          <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.3">請點擊：<span style="color:var(--or);font-size:22px">${cur.lbl}</span></div>
+          <div style="font-size:14px;color:var(--tx2);margin-top:6px;line-height:1.55">${cur.desc}</div></div>`}
     </div>
     <div class="joint-wrap${allDone?' done-marking':''}" id="joint-wrap">
       <img id="joint-img" src="${useImg}" style="width:100%;display:block;max-height:540px;object-fit:contain">
@@ -1473,14 +1578,73 @@ function computeMeasurements(joints, bikePoints, crankLengthMM){
   return m;
 }
 
+// ══ IMAGE LOAD with auto-compression ══════════════════════
+const MAX_FILE_SIZE_MB = 10;       // 上傳檔案上限 10MB（會自動壓縮）
+const TARGET_SIZE_MB = 1.5;         // 壓縮目標大小（每張）
+const MAX_IMAGE_DIMENSION = 1920;   // 壓縮後最長邊
+
 function loadImg(key,file){
-  const r=new FileReader();
-  r.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{S[key+'Img']=img;set({[key+'URL']:e.target.result,error:''});};
-    img.src=e.target.result;
+  // 檢查檔案大小
+  const sizeMB = file.size / 1024 / 1024;
+  if(sizeMB > MAX_FILE_SIZE_MB){
+    set({error:`照片過大（${sizeMB.toFixed(1)}MB），請上傳 ${MAX_FILE_SIZE_MB}MB 以下的照片`});
+    return;
+  }
+
+  const r = new FileReader();
+  r.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // 自動壓縮邏輯
+      compressImage(img, file.type, (compressedDataURL, finalSizeMB) => {
+        const finalImg = new Image();
+        finalImg.onload = () => {
+          S[key+'Img'] = finalImg;
+          set({[key+'URL']: compressedDataURL, error:''});
+          if(finalSizeMB > 0){
+            console.log(`[${key.toUpperCase()}] 原始 ${sizeMB.toFixed(2)}MB → 壓縮後 ${finalSizeMB.toFixed(2)}MB`);
+          }
+        };
+        finalImg.src = compressedDataURL;
+      });
+    };
+    img.src = e.target.result;
   };
   r.readAsDataURL(file);
+}
+
+// 壓縮圖片：縮小到最長邊 1920px，JPEG 品質動態調整到 ~1.5MB 以下
+function compressImage(img, mimeType, callback){
+  let w = img.width, h = img.height;
+  // 縮放
+  if(w > MAX_IMAGE_DIMENSION || h > MAX_IMAGE_DIMENSION){
+    if(w > h){
+      h = Math.round(h * MAX_IMAGE_DIMENSION / w);
+      w = MAX_IMAGE_DIMENSION;
+    } else {
+      w = Math.round(w * MAX_IMAGE_DIMENSION / h);
+      h = MAX_IMAGE_DIMENSION;
+    }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);  // 白色底
+  ctx.drawImage(img, 0, 0, w, h);
+
+  // 動態調整 JPEG 品質直到 < TARGET_SIZE_MB
+  let quality = 0.92;
+  let dataURL;
+  let sizeMB;
+  for(let i=0; i<5; i++){
+    dataURL = canvas.toDataURL('image/jpeg', quality);
+    sizeMB = (dataURL.length * 0.75) / 1024 / 1024;  // base64 約 4/3 倍實際大小
+    if(sizeMB <= TARGET_SIZE_MB) break;
+    quality -= 0.12;
+    if(quality < 0.5) break;
+  }
+  callback(dataURL, sizeMB);
 }
 
 // ══ ANALYSIS ═════════════════════════════════════════════
