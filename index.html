@@ -460,7 +460,7 @@ const S = {
   authError: '',
   // ── 主流程 ──
   step:0,  // 0=問卷, 1=上傳, 2=標關節, 2.5=標車輛, 3=AI分析, 4=報告
-  qstep:1, // 問卷子步驟 1-6
+  qstep:1, // 問卷子步驟 1-7 (新增 Section 6: 姿勢分析)
   markStage:'joints', // 'joints' | 'bike' — Step 2 內的子階段
   questionnaire: {
     age:'', gender:'', height:'', weight:'', frequency:'',
@@ -479,6 +479,12 @@ const S = {
   error:'',
   tab:'angles',
   pct:0, logs:[],
+  // ══ 新增：姿勢分析狀態 ══
+  postureImage: null,
+  postureImageSize: null,
+  postureKeypoints: {},
+  postureStep: 0,
+  postureAnalysis: null,
 };
 
 // 啟動時從 localStorage 載入使用者
@@ -494,6 +500,7 @@ try {
 function set(p){Object.assign(S,p);render();postRender();}
 function postRender(){
   if(S.step===2)setTimeout(initJointCanvas,80);
+  if(S.step===0 && S.qstep===6 && S.postureImage) setTimeout(initPostureCanvas, 80);
   if(S.tab==='visual'&&S.result)requestAnimationFrame(drawSkeleton);
 }
 
@@ -743,7 +750,7 @@ const FLEX_OPTIONS = [
 
 function renderQ(){
   const Q = S.questionnaire;
-  const fill = S.qstep<=5 ? (S.qstep/5*100).toFixed(0) : 100;
+  const fill = S.qstep<=6 ? (S.qstep/6*100).toFixed(0) : 100;
   const v0 = document.getElementById('v0');
 
   v0.innerHTML = `
@@ -754,7 +761,7 @@ function renderQ(){
     </div>
     <div class="q-prog-wrap">
       <div class="q-prog-bg"><div class="q-prog-fill" style="width:${fill}%"></div></div>
-      <div class="q-prog-row"><span>${S.qstep<=5?`第 ${S.qstep} 步，共 5 步`:'問卷完成'}</span><span>${fill}%</span></div>
+      <div class="q-prog-row"><span>${S.qstep<=6?`第 ${S.qstep} 步，共 6 步`:'問卷完成'}</span><span>${fill}%</span></div>
     </div>
     <div class="q-card" id="qcard"></div>
   `;
@@ -765,7 +772,8 @@ function renderQ(){
   if(S.qstep===3) card.innerHTML = qS3();
   if(S.qstep===4) card.innerHTML = qS4();
   if(S.qstep===5) card.innerHTML = qS5();
-  if(S.qstep===6) card.innerHTML = qDone();
+  if(S.qstep===6) card.innerHTML = qS6();  // 新增：姿勢分析
+  if(S.qstep===7) card.innerHTML = qDone(); // 完成頁面移到第 7 步
   bindQ();
 }
 
@@ -894,7 +902,121 @@ function qS5(){
     <div class="q-block" style="margin-top:12px"><div class="q-label"><div class="q-num">+</div>其他疼痛描述（選填）</div>
       <input class="q-input" type="text" placeholder="請描述其他疼痛部位或症狀…" id="qipo" value="${Q.pain_other}"></div>
   </div>
-  ${qFooter(true,'完成問卷')}`;
+  ${qFooter(true)}`;
+}
+
+function qS6(){
+    const hasImage = !!S.postureImage;
+    const hasAnalysis = !!S.postureAnalysis;
+  
+    return `
+      <div class="q-head">
+        <span class="q-emoji">📸</span>
+        <span class="q-label">SECTION 6</span>
+      </div>
+      <div class="q-title">姿勢照片分析</div>
+      <div class="q-sub">上傳側面騎行照片，手動標記 8 個關節點進行專業分析</div>
+
+      <div class="instr">
+        <div class="instr-title">📋 操作步驟</div>
+        <div class="instr-steps">
+          <div class="instr-step">
+            <div class="instr-num">1</div>
+            <div>上傳或拍攝側面騎行照片（建議在關節處貼藍色標記點）</div>
+          </div>
+          <div class="instr-step">
+            <div class="instr-num">2</div>
+            <div>依序點擊 8 個關節位置：肩→肘→腕→髖→膝→踝→腳掌→腳跟</div>
+          </div>
+          <div class="instr-step">
+            <div class="instr-num">3</div>
+            <div>系統自動計算角度並生成專業分析</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <button class="btn-orange" onclick="triggerPostureUpload()" style="flex:1">
+          📷 拍攝照片
+        </button>
+        <button class="btn-dark" onclick="triggerPostureUpload()" style="flex:1">
+          📁 上傳圖片
+        </button>
+      </div>
+      <input type="file" id="posture-file-input" accept="image/*" capture="environment" style="display:none" onchange="handlePostureUpload(event)">
+
+      ${hasImage ? `
+      <div id="posture-canvas-area">
+        <div style="background:var(--sur2);border-radius:var(--rs);padding:16px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:600;color:var(--or)">標記進度</span>
+            <span style="font-size:13px;font-weight:700;color:var(--or)">${S.postureStep} / 8</span>
+          </div>
+          <div style="background:var(--bd);border-radius:100px;height:8px;overflow:hidden">
+            <div style="background:var(--or);height:100%;width:${(S.postureStep/8*100).toFixed(0)}%;transition:width 0.3s"></div>
+          </div>
+        </div>
+
+        <div style="background:var(--dk);border-radius:var(--r);overflow:hidden;margin-bottom:16px;position:relative">
+          <canvas id="posture-canvas" style="width:100%;height:auto;display:block;cursor:crosshair;touch-action:none"></canvas>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn-ghost" onclick="resetPosture()">↻ 重新開始</button>
+          ${S.postureStep > 0 && S.postureStep < 8 ? `<button class="btn-dark" onclick="undoPosturePoint()">↶ 撤銷</button>` : ''}
+        </div>
+      </div>
+      ` : ''}
+
+      ${hasAnalysis ? `
+      <div style="background:linear-gradient(135deg,var(--or),var(--ord));color:#fff;padding:24px;border-radius:var(--r);margin-bottom:16px;text-align:center">
+        <div style="font-size:14px;opacity:0.9;margin-bottom:8px">Fitting 評分</div>
+        <div style="font-size:48px;font-weight:800">${S.postureAnalysis.score}</div>
+        <div style="font-size:12px;opacity:0.9">滿分 100</div>
+      </div>
+
+      <div style="background:var(--sur2);border-radius:var(--r);padding:20px;margin-bottom:16px">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--or)">📊 關鍵角度測量</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:linear-gradient(135deg,#FFF9E6,#FFF3CC);padding:14px;border-radius:var(--rs);border:1px solid var(--orb)">
+            <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">膝關節</div>
+            <div style="font-size:28px;font-weight:700;color:var(--or)">${S.postureAnalysis.angles.knee}°</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">理想：25-40° / 140-155°</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#FFE8E8,#FFD4D4);padding:14px;border-radius:var(--rs);border:1px solid #FFB4B4">
+            <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">髖關節</div>
+            <div style="font-size:28px;font-weight:700;color:#C0231A">${S.postureAnalysis.angles.hip}°</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">理想：45-60°</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#F0E8FF,#E4D4FF);padding:14px;border-radius:var(--rs);border:1px solid #C4B4FF">
+            <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">肘關節</div>
+            <div style="font-size:28px;font-weight:700;color:#7B4FC9">${S.postureAnalysis.angles.elbow}°</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">理想：150-170°</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#E8F4FF,#D4E8FF);padding:14px;border-radius:var(--rs);border:1px solid #B4D8FF">
+            <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">軀幹前傾</div>
+            <div style="font-size:28px;font-weight:700;color:#185FA5">${S.postureAnalysis.angles.back}°</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">理想：30-45°</div>
+          </div>
+        </div>
+      </div>
+
+      ${S.postureAnalysis.recommendations.length > 0 ? `
+      <div style="background:linear-gradient(135deg,var(--orl),#FFE8C5);border:1px solid var(--orb);border-radius:var(--r);padding:20px">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:#8A4200">🔧 Fitting 調整建議</h3>
+        <ul style="list-style:none;padding:0;margin:0">
+          ${S.postureAnalysis.recommendations.map(rec => `
+            <li style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(244,123,0,0.2);font-size:13px;color:#6A3200">
+              <span style="color:var(--or);font-weight:700;font-size:18px">→</span>
+              <span>${rec}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+      ` : ''}
+      ` : ''}
+      ${qFooter(hasAnalysis, '完成問卷')}
+    `;
 }
 
 function qDone(){
@@ -972,8 +1094,56 @@ function bindQ(){
 }
 
 function finishQuestionnaire(){
-  // 問卷完成 → 進入照片上傳
-  set({step:1, error:''});
+  // 問卷完成 → 直接使用 Section 6 的姿勢分析數據生成報告
+  // 跳過 step 1（上傳 BDC/TDC）和 step 2（標關節+標車輛）
+  if(!S.postureAnalysis){
+    // 如果沒有完成 Section 6，回退到原流程
+    set({step:1, error:''});
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  // 將 Section 6 的角度數據映射到報告所需的格式
+  const pa = S.postureAnalysis;
+  const kp = pa.keypoints || {};
+
+  // 把姿勢關鍵點轉為 joints 格式（百分比座標 0-1）
+  const imgW = S.postureImageSize?.width || 1;
+  const imgH = S.postureImageSize?.height || 1;
+  const joints = {};
+  Object.entries(kp).forEach(([k, p]) => {
+    joints[k] = { x: p.x / imgW, y: p.y / imgH };
+  });
+
+  // 將 Section 6 用到的關鍵點對應到報告角度系統
+  // pa.angles: knee, hip, elbow, back
+  // 報告需要: knee_extension, knee_flexion, hip_angle, ankle_max, shoulder_wrist, back_angle
+  const result = {
+    angles: {
+      knee_extension: pa.angles.knee,  // 膝關節角度
+      knee_flexion: null,              // 沒有 TDC 數據
+      hip_angle: pa.angles.hip,        // 髖關節角度
+      ankle_max: null,                 // 沒有專門量測
+      shoulder_wrist: pa.angles.elbow, // 用肘關節角度近似
+      back_angle: pa.angles.back,      // 軀幹前傾
+    },
+    skeleton: joints,
+    overall: pa.score >= 75 ? 'good' : pa.score >= 50 ? 'needs_adjustment' : 'poor',
+    confidence: 85,
+    bottom_up_issues: pa.recommendations || [],
+    summary_zh: `根據姿勢分析（評分 ${pa.score}/100），系統已測量你的膝關節、髖關節、肘關節與軀幹角度。${pa.recommendations.length > 0 ? '請參考下方調整建議。' : '整體姿勢表現良好。'}`,
+  };
+
+  // 把姿勢照片當作 BDC 照片使用（讓報告骨架圖能用）
+  S.bdcURL = S.postureImage;
+  S.joints = joints;
+  S.result = result;
+
+  set({
+    step: 4,    // 直接跳到報告頁
+    tab: 'angles',
+    error: '',
+  });
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -2309,6 +2479,7 @@ function buildFullReportPayload(contact){
     bdc_image: S.bdcURL || '',
     tdc_image: S.tdcURL || '',
     bike_image: S.bikeURL || '',
+    postureAnalysis: S.postureAnalysis || null,
   };
 }
 
@@ -2336,6 +2507,222 @@ function showSuccessUI(name, email, requestId, isDevMode){
     document.body.style.overflow = '';
   };
 }
+// ══ 姿勢分析功能 ════════════════════════════════════════════
+
+const POSTURE_STEPS = [
+  { name: '肩膀', key: 'shoulder', color: '#F47B00', instruction: '點擊肩膀外側關節' },
+  { name: '手肘', key: 'elbow', color: '#a78bfa', instruction: '點擊手肘外側關節' },
+  { name: '手腕', key: 'wrist', color: '#8b5cf6', instruction: '點擊手腕外側' },
+  { name: '髖部', key: 'hip', color: '#f87171', instruction: '點擊髖關節外側' },
+  { name: '膝蓋', key: 'knee', color: '#fbbf24', instruction: '點擊膝蓋外側關節' },
+  { name: '腳踝', key: 'ankle', color: '#34d399', instruction: '點擊外踝' },
+  { name: '腳掌', key: 'foot', color: '#06b6d4', instruction: '點擊腳掌外側' },
+  { name: '腳跟', key: 'heel', color: '#ec4899', instruction: '點擊腳跟後側' }
+];
+
+function triggerPostureUpload(){
+  document.getElementById('posture-file-input')?.click();
+}
+
+function handlePostureUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      set({
+        postureImage: event.target.result,
+        postureImageSize: { width: img.width, height: img.height },
+        postureKeypoints: {},
+        postureStep: 0,
+        postureAnalysis: null
+      });
+      setTimeout(initPostureCanvas, 100);
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function initPostureCanvas(){
+  const canvas = document.getElementById('posture-canvas');
+  if(!canvas) return;
+  
+  drawPostureCanvas();
+  
+  canvas.onclick = (e) => handlePostureClick(e);
+  canvas.ontouchstart = (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handlePostureClick({ clientX: touch.clientX, clientY: touch.clientY });
+  };
+}
+
+function handlePostureClick(e){
+  if(S.postureStep >= 8) return;
+  
+  const canvas = document.getElementById('posture-canvas');
+  if(!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  
+  const scaleX = S.postureImageSize.width / rect.width;
+  const scaleY = S.postureImageSize.height / rect.height;
+  
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  
+  const currentKey = POSTURE_STEPS[S.postureStep].key;
+  S.postureKeypoints[currentKey] = { x, y };
+  S.postureStep++;
+  
+  if(S.postureStep === 8){
+    S.postureAnalysis = analyzePosture();
+  }
+  
+  render();
+  // render() 重建了 DOM，canvas 是新的元素，需要重新綁定事件
+  setTimeout(initPostureCanvas, 50);
+}
+
+function calculateAngle(p1, p2, p3){
+  const radians = Math.atan2(p3.y - p2.y, p3.x - p2.x) - 
+                  Math.atan2(p1.y - p2.y, p1.x - p2.x);
+  let angle = Math.abs(radians * 180.0 / Math.PI);
+  if(angle > 180.0) angle = 360.0 - angle;
+  return Math.round(angle);
+}
+
+function analyzePosture(){
+  const kp = S.postureKeypoints;
+  
+  const footCenter = {
+    x: (kp.ankle.x + kp.foot.x + kp.heel.x) / 3,
+    y: (kp.ankle.y + kp.foot.y + kp.heel.y) / 3
+  };
+  
+  const kneeAngle = calculateAngle(kp.hip, kp.knee, footCenter);
+  const hipAngle = calculateAngle(kp.shoulder, kp.hip, kp.knee);
+  const elbowAngle = calculateAngle(kp.shoulder, kp.elbow, kp.wrist);
+  const backAngle = Math.round(Math.abs(Math.atan2(
+    kp.shoulder.y - kp.hip.y,
+    kp.shoulder.x - kp.hip.x
+  ) * 180 / Math.PI));
+  
+  const recommendations = [];
+  let score = 0;
+  
+  if((kneeAngle >= 25 && kneeAngle <= 40) || (kneeAngle >= 140 && kneeAngle <= 155)){
+    score += 25;
+  } else {
+    if(kneeAngle < 25) recommendations.push('建議升高座椅 1-2cm');
+    if(kneeAngle > 155) recommendations.push('建議降低座椅 1-2cm');
+  }
+  
+  if(hipAngle >= 45 && hipAngle <= 60) score += 25;
+  else if(hipAngle < 45) recommendations.push('建議升高把手或後移座椅');
+  
+  if(elbowAngle >= 150 && elbowAngle <= 170) score += 25;
+  else recommendations.push('建議手肘保持微彎');
+  
+  if(backAngle >= 30 && backAngle <= 45) score += 25;
+  
+  return {
+    angles: { knee: kneeAngle, hip: hipAngle, elbow: elbowAngle, back: backAngle },
+    recommendations,
+    score,
+    keypoints: kp,
+    image: S.postureImage
+  };
+}
+
+function drawPostureCanvas(){
+  const canvas = document.getElementById('posture-canvas');
+  if(!canvas || !S.postureImage) return;
+  
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = () => {
+    canvas.width = S.postureImageSize.width;
+    canvas.height = S.postureImageSize.height;
+    ctx.drawImage(img, 0, 0);
+    
+    const kp = S.postureKeypoints;
+    
+    // 繪製點
+    Object.entries(kp).forEach(([key, point]) => {
+      const step = POSTURE_STEPS.find(s => s.key === key);
+      if(step){
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 12, 0, 2 * Math.PI);
+        ctx.fillStyle = step.color;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    });
+    
+    // 繪製骨架
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    
+    const lines = [
+      [kp.shoulder, kp.hip], [kp.hip, kp.knee], [kp.knee, kp.ankle],
+      [kp.ankle, kp.foot], [kp.foot, kp.heel], [kp.heel, kp.ankle],
+      [kp.shoulder, kp.elbow], [kp.elbow, kp.wrist]
+    ];
+    
+    lines.forEach(([p1, p2]) => {
+      if(p1 && p2){
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    });
+    
+    // 顯示提示
+    if(S.postureStep < 8){
+      const step = POSTURE_STEPS[S.postureStep];
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(10, 10, canvas.width - 20, 60);
+      ctx.fillStyle = step.color;
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        `步驟 ${S.postureStep + 1}/8：${step.instruction}`,
+        canvas.width / 2, 40
+      );
+    }
+  };
+  
+  img.src = S.postureImage;
+}
+
+function resetPosture(){
+  set({
+    postureImage: null,
+    postureImageSize: null,
+    postureKeypoints: {},
+    postureStep: 0,
+    postureAnalysis: null
+  });
+}
+
+function undoPosturePoint(){
+  if(S.postureStep > 0){
+    S.postureStep--;
+    const lastKey = POSTURE_STEPS[S.postureStep].key;
+    delete S.postureKeypoints[lastKey];
+    S.postureAnalysis = null;
+    render();
+    setTimeout(initPostureCanvas, 50);
+  }
+}
 
 // ══ RESET ════════════════════════════════════════════════
 function resetAll(){
@@ -2343,7 +2730,8 @@ function resetAll(){
   set({step:0, qstep:1, markStage:'joints', error:'',bdcURL:null,tdcURL:null,bikeURL:null,
     joints:null, bikePoints:null, crankLength:170, measurements:null,
     result:null,tab:'angles',logs:[],pct:0,
-    questionnaire:{age:'',gender:'',height:'',weight:'',frequency:'',bike_brand:'',bike_model:'',bike_size:'',flexibility:'',injury:[],pain:[],pain_other:''}
+    questionnaire:{age:'',gender:'',height:'',weight:'',frequency:'',bike_brand:'',bike_model:'',bike_size:'',flexibility:'',injury:[],pain:[],pain_other:''},
+    postureImage:null, postureImageSize:null, postureKeypoints:{}, postureStep:0, postureAnalysis:null
   });
 }
 
