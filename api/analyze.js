@@ -37,9 +37,9 @@ module.exports = async function handler(req, res) {
 
     // 先嘗試 gemini-2.5-flash，失敗則 fallback 到 gemini-2.0-flash
     const modelsToTry = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
+     'gemini-2.5-flash-preview-05-20',  // ← 正確的名稱（含日期）
+     'gemini-1.5-flash-latest',          // ← 穩定備用
+     'gemini-1.5-flash',                 // ← 最後備用
     ];
 
     let lastError = null;
